@@ -1,12 +1,26 @@
 const Lead = require('../models/Lead');
+const ChannelPartner = require('../models/ChannelPartner'); 
+
+
 
 // @desc    Create a new lead
 // @route   POST /api/leads
 // @access  Public
-
 const createLead = async (req, res) => {
     try {
         const { channelPartnerCode, leadName, contactNumber, email, leadSource, leadInterest, additionalNotes } = req.body;
+
+        // Check if the contact number is 10 digits
+        const isValidPhoneNumber = /^\d{10}$/.test(contactNumber);
+        if (!isValidPhoneNumber) {
+        return res.status(400).json({ message: 'Contact number must be exactly 10 digits.' });
+          }
+
+        const channelPartner = await ChannelPartner.findOne({ code: channelPartnerCode });
+        
+        if (!channelPartner) {
+            return res.status(404).json({ message: 'Channel Partner Code not found.' });
+        }
 
         // Check for an existing lead with the same details
         const existingLead = await Lead.findOne({
