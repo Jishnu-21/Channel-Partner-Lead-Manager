@@ -1,17 +1,8 @@
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Button, 
-  Container, 
-  MenuItem, 
-  Typography, 
-  Select, 
-  FormControl, 
-  InputLabel 
-} from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Button, Container, MenuItem, Typography, Select, FormControl, InputLabel } from '@mui/material';
 import axios from 'axios';
-import { toast } from 'sonner'; 
-import CustomTextField from './CustomTextField'; 
+import { toast } from 'sonner';
+import CustomTextField from './CustomTextField';
 import { API_URL } from '../../config.jsx';
 
 const LeadForm = () => {
@@ -25,13 +16,33 @@ const LeadForm = () => {
     additionalNotes: '',
   });
 
+  const [channelPartnerCode, setChannelPartnerCode] = useState('');
+  const token = localStorage.getItem('token'); 
   const leadSources = ['Social Media', 'Referral', 'Website', 'Advertisement', 'Event'];
 
+  useEffect(() => {
+    const fetchChannelPartnerCode = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/users/cp`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log(response.data)
+        setChannelPartnerCode(response.data.channelPartnerCode);
+        setLeadData((prevData) => ({
+          ...prevData,
+          channelPartnerCode: response.data.channelPartnerCode,
+        }));
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to fetch channel partner code.');
+        console.error('Error fetching channel partner code:', error);
+      }
+    };
+
+    if (token) fetchChannelPartnerCode();
+  }, [token]);
+
   const handleChange = (e) => {
-    setLeadData({
-      ...leadData,
-      [e.target.name]: e.target.value,
-    });
+    setLeadData({ ...leadData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -41,7 +52,7 @@ const LeadForm = () => {
       toast.success('Lead submitted successfully!');
       console.log('Lead created:', response.data);
       setLeadData({
-        channelPartnerCode: '',
+        channelPartnerCode: channelPartnerCode, // Retain the fetched code
         leadName: '',
         contactNumber: '',
         email: '',
@@ -56,28 +67,9 @@ const LeadForm = () => {
   };
 
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      p={2}
-      sx={{ 
-        minHeight: '100vh', 
-        bgcolor: 'transparent',
-        paddingX: { xs: 2, sm: 4 }, // Responsive padding
-      }}
-    >
+    <Box display="flex" justifyContent="center" alignItems="center" p={2} sx={{ minHeight: '100vh', bgcolor: 'transparent', paddingX: { xs: 2, sm: 4 } }}>
       <Container maxWidth="sm">
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          align="center" 
-          gutterBottom 
-          sx={{ 
-            color: 'white', 
-            fontSize: { xs: '1.5rem', sm: '2rem' } // Responsive font size
-          }}
-        >
+        <Typography variant="h4" component="h1" align="center" gutterBottom sx={{ color: 'white', fontSize: { xs: '1.5rem', sm: '2rem' } }}>
           Lead Submission Form
         </Typography>
         <form onSubmit={handleSubmit} style={{ color: 'white' }}>
@@ -87,8 +79,8 @@ const LeadForm = () => {
             value={leadData.channelPartnerCode}
             onChange={handleChange}
             required
+            disabled // Disable the input as it's fetched automatically
           />
-
           <CustomTextField
             label="Lead Name"
             name="leadName"
@@ -96,7 +88,6 @@ const LeadForm = () => {
             onChange={handleChange}
             required
           />
-
           <CustomTextField
             label="Contact Number"
             name="contactNumber"
@@ -105,7 +96,6 @@ const LeadForm = () => {
             required
             type="number"
           />
-
           <CustomTextField
             label="Email"
             name="email"
@@ -114,7 +104,6 @@ const LeadForm = () => {
             required
             type="email"
           />
-
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel sx={{ color: 'white' }}>Lead Source</InputLabel>
             <Select
@@ -154,7 +143,6 @@ const LeadForm = () => {
               ))}
             </Select>
           </FormControl>
-
           <CustomTextField
             label="Lead Interest"
             name="leadInterest"
@@ -162,7 +150,6 @@ const LeadForm = () => {
             onChange={handleChange}
             required
           />
-
           <CustomTextField
             label="Additional Notes"
             name="additionalNotes"
@@ -171,18 +158,12 @@ const LeadForm = () => {
             multiline
             rows={4}
           />
-
           <Button
             type="submit"
             variant="contained"
             color="primary"
             fullWidth
-            sx={{ 
-              py: 2, 
-              fontSize: { xs: '0.8rem', sm: '1rem' }, // Responsive font size for button
-              backgroundColor: 'white', 
-              color: 'black' 
-            }}
+            sx={{ py: 2, fontSize: { xs: '0.8rem', sm: '1rem' }, backgroundColor: 'white', color: 'black' }}
           >
             Submit Lead
           </Button>
