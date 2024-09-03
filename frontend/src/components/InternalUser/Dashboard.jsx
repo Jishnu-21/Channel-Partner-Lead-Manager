@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Grid, Box, Button, TextField } from '@mui/material'; // Import TextField
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { Container, Typography, Grid, Box, Button, TextField } from '@mui/material';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css'; // Import the CSS for styling
 import StatsCard from './StatsCard';
 import PartnerSelector from './PartnerSelector';
 import LeadsByPartnerChart from './LeadsByPartnerChart';
@@ -64,24 +63,24 @@ const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartn
           <PartnerSelector uniquePartners={uniquePartners} selectedPartner={selectedPartner} handlePartnerChange={handlePartnerChange} />
         </Grid>
         <Grid item xs={12} md={4}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Start Date"
-              value={startDate}
-              onChange={(newValue) => setStartDate(newValue)}
-              renderInput={(params) => <TextField {...params} fullWidth />}
-            />
-          </LocalizationProvider>
+          <TextField fullWidth label="Start Date" value={startDate ? startDate.toLocaleDateString() : ''} readOnly />
+          <DatePicker
+            selected={startDate}
+            onChange={(date) => setStartDate(date)}
+            dateFormat="MMMM d, yyyy"
+            className="date-picker"
+            placeholderText="Select Start Date"
+          />
         </Grid>
         <Grid item xs={12} md={4}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="End Date"
-              value={endDate}
-              onChange={(newValue) => setEndDate(newValue)}
-              renderInput={(params) => <TextField {...params} fullWidth />}
-            />
-          </LocalizationProvider>
+          <TextField fullWidth label="End Date" value={endDate ? endDate.toLocaleDateString() : ''} readOnly />
+          <DatePicker
+            selected={endDate}
+            onChange={(date) => setEndDate(date)}
+            dateFormat="MMMM d, yyyy"
+            className="date-picker"
+            placeholderText="Select End Date"
+          />
         </Grid>
       </Grid>
 
