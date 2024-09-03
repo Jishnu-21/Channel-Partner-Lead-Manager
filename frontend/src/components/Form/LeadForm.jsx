@@ -37,10 +37,9 @@ const LeadForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_URL}/leads`, leadData); // Replace with your actual API endpoint
-      toast.success('Lead submitted successfully!'); // Show success toast
+      const response = await axios.post(`${API_URL}/leads`, leadData);
+      toast.success('Lead submitted successfully!');
       console.log('Lead created:', response.data);
-      // Optionally reset the form after successful submission
       setLeadData({
         channelPartnerCode: '',
         leadName: '',
@@ -51,7 +50,7 @@ const LeadForm = () => {
         additionalNotes: '',
       });
     } catch (error) {
-      toast.error(error.response?.data?.message || 'An error occurred while submitting the lead.'); // Show error toast
+      toast.error(error.response?.data?.message || 'An error occurred while submitting the lead.');
       console.error('Error creating lead:', error);
     }
   };
@@ -64,7 +63,8 @@ const LeadForm = () => {
       p={2}
       sx={{ 
         minHeight: '100vh', 
-        bgcolor: 'transparent'  // Make the Box transparent
+        bgcolor: 'transparent',
+        paddingX: { xs: 2, sm: 4 }, // Responsive padding
       }}
     >
       <Container maxWidth="sm">
@@ -73,7 +73,10 @@ const LeadForm = () => {
           component="h1" 
           align="center" 
           gutterBottom 
-          sx={{ color: 'white' }}
+          sx={{ 
+            color: 'white', 
+            fontSize: { xs: '1.5rem', sm: '2rem' } // Responsive font size
+          }}
         >
           Lead Submission Form
         </Typography>
@@ -174,7 +177,12 @@ const LeadForm = () => {
             variant="contained"
             color="primary"
             fullWidth
-            sx={{ py: 2, fontSize: '1rem', backgroundColor: 'white', color: 'black' }}
+            sx={{ 
+              py: 2, 
+              fontSize: { xs: '0.8rem', sm: '1rem' }, // Responsive font size for button
+              backgroundColor: 'white', 
+              color: 'black' 
+            }}
           >
             Submit Lead
           </Button>
