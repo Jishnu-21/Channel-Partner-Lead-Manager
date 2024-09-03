@@ -2,6 +2,8 @@
 
 A comprehensive web application that allows channel partners to submit leads and store their details in a database. Internal users can access these details and visualize data through charts. This project utilizes Node.js, Express, and a database for backend functionality, along with React, Material-UI, and Recharts for a responsive and interactive frontend.
 
+Site user-Guide: https://ionized-purple-f48.notion.site/Channel-Partner-Lead-Manager-User-Guide-120b7ec3f85548baa30dddd933dd5e7c?pvs=4
+
 ## Table of Contents
 
 - [Features](#features)
