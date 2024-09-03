@@ -19,43 +19,43 @@ const LoginPage = () => {
   const token = localStorage.getItem('token'); 
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!email || !password) {
-    toast.error('Please fill in all fields');
-    return;
-  }
-
-  setLoading(true);
-
-  // Introduce a delay of 5 seconds before the actual login
-  setTimeout(async () => {
-    try {
-      const response = await axios.post(`${API_URL}/users/login`, { email, password, userType });
-      const { token } = response.data;
-
-      dispatch(login({ userType, token }));
-      localStorage.setItem('token', token);
-      toast.success('Login successful!');
-
-      setLoading(false);
-
-      if (userType === 'channelPartner') {
-        navigate('/channel-partner');
-      } else if (userType === 'internalUser') {
-        navigate('/internal-user');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      setLoading(false);
-      if (error.response) {
-        toast.error(error.response.data.message || 'Login failed. Please check your credentials.');
-      } else {
-        toast.error('Login failed. Please try again later.');
-      }
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return;
     }
-  }, 1000);
-};
+
+    setLoading(true);
+
+    // Introduce a delay of 5 seconds before the actual login
+    setTimeout(async () => {
+      try {
+        const response = await axios.post(`${API_URL}/users/login`, { email, password, userType });
+        const { token } = response.data;
+
+        dispatch(login({ userType, token }));
+        localStorage.setItem('token', token);
+        toast.success('Login successful!');
+
+        setLoading(false);
+
+        if (userType === 'channelPartner') {
+          navigate('/channel-partner');
+        } else if (userType === 'internalUser') {
+          navigate('/internal-user');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        setLoading(false);
+        if (error.response) {
+          toast.error(error.response.data.message || 'Login failed. Please check your credentials.');
+        } else {
+          toast.error('Login failed. Please try again later.');
+        }
+      }
+    }, 1000);
+  };
 
   return (
     <Container component="main" maxWidth="xs" sx={{ 
@@ -113,7 +113,7 @@ const LoginPage = () => {
           </Button>
         </Box>
       </Paper>
-      
+
       {/* Tooltip with example credentials */}
       <Tooltip 
         title={
@@ -124,13 +124,15 @@ const LoginPage = () => {
             <Typography variant="body2"><strong>Internal User:</strong> internaluser77@example.com / userpassword</Typography>
           </div>
         } 
-        placement="top"
+        placement="right" // Change placement to right to avoid top issues
+        arrow
+        sx={{ zIndex: 9999 }} // Ensure tooltip appears above other elements
       >
         <IconButton 
           sx={{ 
             position: 'absolute', 
-            right: 0, 
-            bottom: 205,
+            right: 10,  // Adjust right position as needed
+            top: '72%', // Position it lower to avoid the top of the screen
             color: 'blue' 
           }}
         >
