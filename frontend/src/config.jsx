@@ -1,1 +1,1 @@
-export const API_URL = 'https://leadtrack.chickenkiller.com/api';
+export const API_URL = 'http://leadtrack.chickenkiller.com/api';
