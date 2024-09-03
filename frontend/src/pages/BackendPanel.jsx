@@ -15,32 +15,29 @@ const BackendPanel = () => {
     leadInterest: '',
     timeframe: ''
   });
-  const [selectedPartner, setSelectedPartner] = useState('');
+  const [selectedPartners, setSelectedPartners] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [channelPartners, setChannelPartners] = useState([]); // New state for channel partners
+  const [channelPartners, setChannelPartners] = useState([]);
 
-  // Fetch leads from the API
   useEffect(() => {
     const fetchLeads = async () => {
       const response = await fetch(`${API_URL}/leads`);
       const data = await response.json();
       setLeads(data);
-      setFilteredLeads(data); // Set initial filtered leads to all leads
+      setFilteredLeads(data);
     };
     fetchLeads();
   }, []);
 
-  // Fetch channel partners from the API
   useEffect(() => {
     const fetchChannelPartners = async () => {
       const response = await fetch(`${API_URL}/users/channel-partners`);
       const data = await response.json();
-      setChannelPartners(data); 
+      setChannelPartners(data);
     };
     fetchChannelPartners();
   }, []);
 
-  // Handle changes in filter input fields
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilter(prevFilter => ({
@@ -49,21 +46,18 @@ const BackendPanel = () => {
     }));
   };
 
-  // Apply filters to the leads
   const applyFilters = () => {
     const filtered = leads.filter(lead => {
-      const date = new Date(lead.date); // Assuming 'date' is a field in lead data
+      const date = new Date(lead.date);
       const currentDate = new Date();
       
-      // Determine timeframe condition
       const timeframeCondition = filter.timeframe ? 
         (filter.timeframe === 'daily' ? date.toDateString() === currentDate.toDateString() :
         filter.timeframe === 'weekly' ? 
-          (date.getTime() - currentDate.getTime()) / (1000 * 3600 * 24) <= 7 :
+          (currentDate.getTime() - date.getTime()) / (1000 * 3600 * 24) <= 7 :
         filter.timeframe === 'monthly' ? date.getMonth() === currentDate.getMonth() && date.getFullYear() === currentDate.getFullYear() : true) 
       : true;
 
-      // Return true if lead matches all filter criteria
       return (
         (filter.channelPartnerCode === '' || lead.channelPartnerCode === filter.channelPartnerCode) &&
         (filter.leadSource === '' || lead.leadSource === filter.leadSource) &&
@@ -74,7 +68,6 @@ const BackendPanel = () => {
     setFilteredLeads(filtered);
   };
 
-  // Reset filters to default state
   const resetFilter = () => {
     setFilter({
       channelPartnerCode: '',
@@ -82,21 +75,31 @@ const BackendPanel = () => {
       leadInterest: '',
       timeframe: ''
     });
-    setFilteredLeads(leads); // Reset filtered leads to original leads
+    setFilteredLeads(leads);
+    setSelectedPartners([]); 
   };
 
-  // Handle changes to the selected partner
   const handlePartnerChange = (event) => {
-    setSelectedPartner(event.target.value);
+    const value = event.target.value;
+  
+    if (value === "") {
+      setSelectedPartners([]); // Reset to default state when "All Partners" is selected
+      // You can also reset any other states here as needed
+    } else {
+      setSelectedPartners(value);
+    }
   };
+  
 
-  // Get selected leads based on the chosen partner
-  const selectedLeads = selectedPartner 
-    ? filteredLeads.filter(lead => lead.channelPartnerCode === selectedPartner)
+  const selectedLeads = selectedPartners.length > 0
+    ? filteredLeads.filter(lead => selectedPartners.includes(lead.channelPartnerCode))
     : filteredLeads;
 
-  // Extract unique channel partners from the fetched data
   const uniquePartners = channelPartners.map(partner => partner.channelPartnerCode);
+
+  useEffect(() => {
+    applyFilters();
+  }, [filter, leads]);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -104,7 +107,7 @@ const BackendPanel = () => {
         drawerOpen={drawerOpen} 
         setDrawerOpen={setDrawerOpen} 
         setActiveView={setActiveView} 
-        resetFilter={resetFilter} // Pass reset function to Sidebar
+        resetFilter={resetFilter}
       />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
@@ -112,8 +115,12 @@ const BackendPanel = () => {
           ? <Dashboard 
               selectedLeads={selectedLeads} 
               uniquePartners={uniquePartners} 
-              selectedPartner={selectedPartner} 
+              selectedPartners={selectedPartners} 
               handlePartnerChange={handlePartnerChange} 
+              filter={filter}
+              handleFilterChange={handleFilterChange}
+              applyFilters={applyFilters}
+              filteredLeads={filteredLeads} // Pass filteredLeads here
             />
           : <DataManagement 
               filter={filter} 
