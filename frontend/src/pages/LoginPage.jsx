@@ -17,27 +17,29 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token'); 
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+  if (!email || !password) {
+    toast.error('Please fill in all fields');
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
+  // Introduce a delay of 5 seconds before the actual login
+  setTimeout(async () => {
     try {
       const response = await axios.post(`${API_URL}/users/login`, { email, password, userType });
       const { token } = response.data;
 
       dispatch(login({ userType, token }));
-      
       localStorage.setItem('token', token);
       toast.success('Login successful!');
 
       setLoading(false);
-      
+
       if (userType === 'channelPartner') {
         navigate('/channel-partner');
       } else if (userType === 'internalUser') {
@@ -52,13 +54,8 @@ const LoginPage = () => {
         toast.error('Login failed. Please try again later.');
       }
     }
-  };
-
-  useEffect(() => {
-    if (token) {
-      navigate(userType === "channelPartner" ? "/channel-partner" : "/internal-user");
-    }
-  }, [token, userType, navigate]);
+  }, 1000);
+};
 
   return (
     <Container component="main" maxWidth="xs" sx={{ 
@@ -132,8 +129,8 @@ const LoginPage = () => {
         <IconButton 
           sx={{ 
             position: 'absolute', 
-            left: 8, 
-            bottom: 8,
+            right: 0, 
+            bottom: 205,
             color: 'blue' 
           }}
         >
