@@ -7,6 +7,13 @@ const bodyParser = require('body-parser');
 
 const cors = require('cors');
 
+const https = require('https');
+
+const instance = axios.create({
+  httpsAgent: new https.Agent({
+    rejectUnauthorized: false
+  })
+});
 
 
 dotenv.config();
