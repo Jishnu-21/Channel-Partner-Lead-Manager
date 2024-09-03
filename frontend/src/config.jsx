@@ -1,1 +1,1 @@
-export const API_URL = 'https://13.233.51.120/api';
+export const API_URL = 'https://channel-partner-lead-manager2.onrender.com/api';
