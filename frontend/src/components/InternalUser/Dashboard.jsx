@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Grid, Box, Button } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { Container, Typography, Grid, Box, Button, TextField } from '@mui/material';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css'; // Import the CSS for styling
 import StatsCard from './StatsCard';
 import PartnerSelector from './PartnerSelector';
 import LeadsByPartnerChart from './LeadsByPartnerChart';
 import LeadsBySourceChart from './LeadsBySourceChart';
 import { downloadCSV } from './utils';
+import { toast } from 'sonner'; // Import sonner for notifications
 
 const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartnerChange }) => {
   const [startDate, setStartDate] = useState(null);
@@ -54,6 +54,14 @@ const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartn
     });
   };
 
+  const handleEndDateChange = (date) => {
+    if (startDate && date < startDate) {
+      toast.error("End date cannot be less than start date.");
+    } else {
+      setEndDate(date);
+    }
+  };
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
@@ -64,24 +72,40 @@ const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartn
           <PartnerSelector uniquePartners={uniquePartners} selectedPartner={selectedPartner} handlePartnerChange={handlePartnerChange} />
         </Grid>
         <Grid item xs={12} md={4}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Start Date"
-              value={startDate}
-              onChange={(newValue) => setStartDate(newValue)}
-              renderInput={(params) => <TextField {...params} fullWidth />}
-            />
-          </LocalizationProvider>
+          <TextField
+            fullWidth
+            label="Start Date"
+            value={startDate ? startDate.toLocaleDateString() : ''}
+            onClick={() => setStartDate(new Date())} // Allow user to click to select date
+            readOnly
+            sx={{ cursor: 'pointer' }} // Change cursor to pointer to indicate interaction
+          />
+          <DatePicker
+            selected={startDate}
+            onChange={(date) => setStartDate(date)}
+            dateFormat="MMMM d, yyyy"
+            className="date-picker"
+            placeholderText="Select Start Date"
+            popperPlacement="bottom" // Optional: Adjust placement of the date picker
+          />
         </Grid>
         <Grid item xs={12} md={4}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="End Date"
-              value={endDate}
-              onChange={(newValue) => setEndDate(newValue)}
-              renderInput={(params) => <TextField {...params} fullWidth />}
-            />
-          </LocalizationProvider>
+          <TextField
+            fullWidth
+            label="End Date"
+            value={endDate ? endDate.toLocaleDateString() : ''}
+            onClick={() => setEndDate(new Date())} // Allow user to click to select date
+            readOnly
+            sx={{ cursor: 'pointer' }} // Change cursor to pointer to indicate interaction
+          />
+          <DatePicker
+            selected={endDate}
+            onChange={handleEndDateChange} // Use custom handler
+            dateFormat="MMMM d, yyyy"
+            className="date-picker"
+            placeholderText="Select End Date"
+            popperPlacement="bottom" // Optional: Adjust placement of the date picker
+          />
         </Grid>
       </Grid>
 
