@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Grid, Box, Button } from '@mui/material';
+import { Container, Typography, Grid, Box, Button, TextField } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -61,28 +61,30 @@ const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartn
       </Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
-          <PartnerSelector uniquePartners={uniquePartners} selectedPartner={selectedPartner} handlePartnerChange={handlePartnerChange} />
+          <PartnerSelector 
+            uniquePartners={uniquePartners} 
+            selectedPartner={selectedPartner} 
+            handlePartnerChange={handlePartnerChange} 
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <Grid item xs={12} md={4}>
             <DatePicker
               label="Start Date"
               value={startDate}
               onChange={(newValue) => setStartDate(newValue)}
               renderInput={(params) => <TextField {...params} fullWidth />}
             />
-          </LocalizationProvider>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
+          </Grid>
+          <Grid item xs={12} md={4}>
             <DatePicker
               label="End Date"
               value={endDate}
               onChange={(newValue) => setEndDate(newValue)}
               renderInput={(params) => <TextField {...params} fullWidth />}
             />
-          </LocalizationProvider>
-        </Grid>
+          </Grid>
+        </LocalizationProvider>
       </Grid>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
