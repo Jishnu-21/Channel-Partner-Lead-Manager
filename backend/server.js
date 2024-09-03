@@ -4,9 +4,16 @@ const connectDB = require('./config/db');
 const leadRoutes = require('./routes/leadRoutes');
 const userRoutes = require('./routes/userRoutes');
 const bodyParser = require('body-parser'); 
-
+const axios = require('axios')
 const cors = require('cors');
 
+const https = require('https');
+
+const instance = axios.create({
+  httpsAgent: new https.Agent({
+    rejectUnauthorized: false
+  })
+});
 
 
 dotenv.config();
@@ -15,7 +22,10 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: 'https://channel-partner-lead-manager.onrender.com',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+}));
 
 
 app.use(express.json());
