@@ -22,7 +22,10 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: 'https://channel-partner-lead-manager.onrender.com/',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+}));
 
 
 app.use(express.json());
