@@ -132,8 +132,8 @@ const LoginPage = () => {
         <IconButton 
           sx={{ 
             position: 'absolute', 
-            left: 8, 
-            bottom: 8,
+            right: 0, 
+            bottom: 205,
             color: 'blue' 
           }}
         >
