@@ -89,41 +89,41 @@ const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartn
     ];
 
     return (
-    <Card elevation={3} sx={{ height: '100%' }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>{title}</Typography>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={data} margin={{ top: 20, right: 50, left: 20, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="date"
-              tick={{ fontSize: 12 }}
-              interval="preserveStartEnd"
-              tickFormatter={(value) => new Date(value).toLocaleDateString()}
-            />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip
-              contentStyle={{ backgroundColor: theme.palette.background.paper }}
-              labelStyle={{ fontWeight: 'bold' }}
-            />
-            <Legend wrapperStyle={{ paddingTop: '10px' }} />
-            {Object.keys(data[0]).filter(key => key !== 'date').map((key, index) => (
-              <Line
-                key={key}
-                type="monotone"
-                dataKey={key}
-                stroke={COLORS[index % COLORS.length]} // Use more distinct colors
-                strokeWidth={3} // Slightly thicker lines for better visibility
-                dot={{ stroke: theme.palette.primary.main, strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6 }}
+      <Card elevation={3} sx={{ height: '100%' }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>{title}</Typography>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={data} margin={{ top: 20, right: 50, left: 20, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
+                tickFormatter={(value) => new Date(value).toLocaleDateString()}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  );
-};
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: theme.palette.background.paper }}
+                labelStyle={{ fontWeight: 'bold' }}
+              />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} />
+              {Object.keys(data[0]).filter(key => key !== 'date').map((key, index) => (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={COLORS[index % COLORS.length]} // Use more distinct colors
+                  strokeWidth={3} // Slightly thicker lines for better visibility
+                  dot={{ stroke: theme.palette.primary.main, strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    );
+  };
 
   const renderPieChart = (data, title) => {
     if (!data || data.length === 0) {
@@ -198,12 +198,13 @@ const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartn
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>Dashboard</Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
+          <FormControl fullWidth variant="outlined">
             <InputLabel id="partner-select-label">Channel Partner</InputLabel>
             <Select
               labelId="partner-select-label"
               value={selectedPartner}
               onChange={handlePartnerChange}
+              label="Channel Partner"
             >
               <MenuItem value="">All Partners</MenuItem>
               {uniquePartners.map((partner) => (
@@ -213,12 +214,13 @@ const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartn
           </FormControl>
         </Grid>
         <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
+          <FormControl fullWidth variant="outlined">
             <InputLabel id="time-range-label">Time Range</InputLabel>
             <Select
               labelId="time-range-label"
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
+              label="Time Range"
             >
               <MenuItem value="daily">Daily</MenuItem>
               <MenuItem value="weekly">Weekly</MenuItem>
@@ -229,47 +231,74 @@ const Dashboard = ({ selectedLeads, uniquePartners, selectedPartner, handlePartn
       </Grid>
       
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4}>
-          <Card elevation={3}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Total Leads</Typography>
-              <Typography variant="h3">{selectedLeads.length}</Typography>
-            </CardContent>
-          </Card>
+  <Grid item xs={12} sm={6} md={4}>
+    <Card elevation={3}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>Total Leads</Typography>
+        <Typography variant="h3">{selectedLeads.length}</Typography>
+      </CardContent>
+    </Card>
+  </Grid>
+  <Grid item xs={12} sm={6} md={4}>
+    <Card elevation={3}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>Total Partners</Typography>
+        <Typography variant="h3">{uniquePartners.length}</Typography>
+      </CardContent>
+    </Card>
+  </Grid>
+  <Grid item xs={12} sm={12} md={4}>
+  <Card elevation={3}>
+    <CardContent>
+      <Typography variant="h6" gutterBottom>Top Lead Source</Typography>
+      <Typography variant="h3">
+        {(() => {
+          // Check if "All Partners" is selected
+          if (!selectedPartner) {
+            // Calculate top lead source across all selected leads
+            const leadSourceCounts = selectedLeads.reduce((acc, lead) => {
+              acc[lead.leadSource] = (acc[lead.leadSource] || 0) + 1;
+              return acc;
+            }, {});
+
+            if (Object.keys(leadSourceCounts).length === 0) return 'No Leads';
+
+            const topLeadSource = Object.keys(leadSourceCounts).reduce((a, b) => leadSourceCounts[a] > leadSourceCounts[b] ? a : b);
+
+            return `${topLeadSource} (${leadSourceCounts[topLeadSource]} leads)`;
+          } else {
+            // Calculate top lead source for the selected partner
+            const leadsForPartner = selectedLeads.filter(lead => lead.channelPartnerCode === selectedPartner);
+
+            if (leadsForPartner.length === 0) return 'No Leads';
+
+            const leadSourceCounts = leadsForPartner.reduce((acc, lead) => {
+              acc[lead.leadSource] = (acc[lead.leadSource] || 0) + 1;
+              return acc;
+            }, {});
+
+            const topLeadSource = Object.keys(leadSourceCounts).reduce((a, b) => leadSourceCounts[a] > leadSourceCounts[b] ? a : b);
+
+            return `${topLeadSource} (${leadSourceCounts[topLeadSource]} leads)`;
+          }
+        })()}
+      </Typography>
+    </CardContent>
+  </Card>
+</Grid>
+
+</Grid>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={8}>
+          {renderLineChart(channelPartnerData, 'Leads by Channel Partner')}
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <Card elevation={3}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Unique Channel Partners</Typography>
-              <Typography variant="h3">{uniquePartners.length}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <Card elevation={3}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Average Leads per Partner</Typography>
-              <Typography variant="h3">
-                {uniquePartners.length > 0 
-                  ? (selectedLeads.length / uniquePartners.length).toFixed(2) 
-                  : '0.00'}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} md={4}>
+          {renderPieChart(selectedLeads, 'Leads by Source')}
         </Grid>
       </Grid>
-      
-      <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 3 }}>
-        <Box sx={{ flex: 1, minHeight: '400px' }}>
-          {renderLineChart(channelPartnerData, 'Channel Partner Performance Over Time')}
-        </Box>
-        <Box sx={{ flex: 1, minHeight: '400px' }}>
-          {renderPieChart(selectedLeads, 'Lead Source Distribution')}
-        </Box>
-      </Box>
 
-      {/* Download CSV Button */}
-      <Box sx={{ mt: 4 }}>
+      <Box mt={4} textAlign="right">
         <Button variant="contained" color="primary" onClick={downloadCSV}>
           Download CSV
         </Button>
