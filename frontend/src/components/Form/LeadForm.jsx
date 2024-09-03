@@ -26,7 +26,6 @@ const LeadForm = () => {
         const response = await axios.get(`${API_URL}/users/cp`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(response.data)
         setChannelPartnerCode(response.data.channelPartnerCode);
         setLeadData((prevData) => ({
           ...prevData,
@@ -50,7 +49,6 @@ const LeadForm = () => {
     try {
       const response = await axios.post(`${API_URL}/leads`, leadData);
       toast.success('Lead submitted successfully!');
-      console.log('Lead created:', response.data);
       setLeadData({
         channelPartnerCode: channelPartnerCode, // Retain the fetched code
         leadName: '',
@@ -79,7 +77,7 @@ const LeadForm = () => {
             value={leadData.channelPartnerCode}
             onChange={handleChange}
             required
-            disabled // Disable the input as it's fetched automatically
+            disabled // Disable the input so it cannot be edited
           />
           <CustomTextField
             label="Lead Name"
