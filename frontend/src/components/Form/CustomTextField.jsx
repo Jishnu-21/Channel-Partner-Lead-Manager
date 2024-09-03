@@ -10,6 +10,7 @@ const CustomTextField = ({
   rows,
   required = false,
   type = 'text',
+  disabled = false, // Explicitly accept the disabled prop
 }) => {
   return (
     <TextField
@@ -23,21 +24,21 @@ const CustomTextField = ({
       fullWidth
       multiline={multiline}
       rows={multiline ? rows : undefined}
+      disabled={disabled} // Pass the disabled prop to the TextField
       sx={{
         mb: 2,
-        '& label': { color: 'white' },
+        '& label': { color: disabled ? 'rgba(255, 255, 255, 0.5)' : 'white' },
         '& input, & textarea': {
           color: 'white',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: disabled ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.1)',
         },
         '& .MuiOutlinedInput-root': {
-          '& fieldset': { borderColor: 'white' },
-          '&:hover fieldset': { borderColor: 'white' },
-          '&.Mui-focused fieldset': { borderColor: 'white' },
+          '& fieldset': { borderColor: disabled ? 'rgba(255, 255, 255, 0.3)' : 'white' },
+          '&:hover fieldset': { borderColor: disabled ? 'rgba(255, 255, 255, 0.3)' : 'white' },
+          '&.Mui-focused fieldset': { borderColor: disabled ? 'rgba(255, 255, 255, 0.3)' : 'white' },
           '&.Mui-focused input, &.Mui-focused textarea': {
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: disabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
           },
-          // Autofill styles
           '& input:-webkit-autofill': {
             WebkitBoxShadow: '0 0 0 30px #1e1e1e inset !important',
             WebkitTextFillColor: 'white !important',
