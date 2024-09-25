@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
 import LeadForm from '../components/Form/LeadForm';
-import LogoutButton from '../components/LogoutButton';
-import ProtectedRoute from '../components/ProtectedRoute'; // Import ProtectedRoute
+// import LogoutButton from '../components/LogoutButton'; // Removed unused import
 import { useTheme, useMediaQuery, IconButton, Menu, MenuItem } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout'; // Import Logout icon
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const Homepage = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Check if the screen is mobile
-  const [anchorEl, setAnchorEl] = useState(null); // State for menu anchor
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const backgroundStyle = {
-    backgroundImage: 'url("sl_0210121_40570_43.jpg")', // Background image
+    backgroundImage: 'url("sl_0210121_40570_43.jpg")',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     minHeight: '100vh',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative', // Position for absolute children
+    position: 'relative',
   };
 
   const buttonStyle = {
@@ -28,40 +27,40 @@ const Homepage = () => {
   };
 
   const handleClick = (event) => {
-    setAnchorEl(event.currentTarget); // Open menu
+    setAnchorEl(event.currentTarget);
   };
 
   const handleClose = () => {
-    setAnchorEl(null); // Close menu
+    setAnchorEl(null);
   };
 
   return (
-    <ProtectedRoute requiredType="channelPartner"> {/* Adjust requiredType based on your logic */}
-      <div style={backgroundStyle}>
-        <LeadForm />
-        {/* Conditional rendering for mobile */}
-        {isMobile ? (
-          <div style={buttonStyle}>
-            <IconButton onClick={handleClick} color="primary">
-              <LogoutIcon /> {/* Logout icon */}
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)} // Check if the menu should be open
-              onClose={handleClose}
-            >
-              <MenuItem onClick={handleClose}>
-                <LogoutButton /> {/* Logout button in the menu */}
-              </MenuItem>
-            </Menu>
-          </div>
-        ) : (
-          <div style={buttonStyle}>
-            <LogoutButton /> {/* Regular logout button for desktop */}
-          </div>
-        )}
-      </div>
-    </ProtectedRoute>
+    <div style={backgroundStyle}>
+      <LeadForm />
+      {isMobile ? (
+        <div style={buttonStyle}>
+          <IconButton onClick={handleClick} color="primary">
+            <LogoutIcon />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleClose}>
+              {/* Logout functionality can be added here */}
+              Logout
+            </MenuItem>
+          </Menu>
+        </div>
+      ) : (
+        <div style={buttonStyle}>
+          <IconButton onClick={handleClose} color="primary">
+            <LogoutIcon />
+          </IconButton>
+        </div>
+      )}
+    </div>
   );
 };
 

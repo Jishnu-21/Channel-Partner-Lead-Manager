@@ -14,16 +14,8 @@ const App = () => {
   return (
     <Router>
       <Toaster/>
-      <Routes>
-      <Route 
-          path="/" 
-          element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          } 
-        />      
-      <Route path="/channel-partner" element={<Homepage/>} />
+      <Routes>   
+      <Route path="/" element={<Homepage/>} />
       <Route 
             path="/internal-user" 
             element={

@@ -6,7 +6,8 @@ import {
   Select, 
   MenuItem,
   OutlinedInput,
-  Button
+  Button,
+  TextField
 } from '@mui/material';
 import CustomTextField from './CustomTextField';
 
@@ -30,26 +31,14 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
   };
 
   const dateFieldSx = {
-    '& .MuiInputLabel-root': {
-      color: 'white',
-      transform: 'translate(14px, -9px) scale(0.75)',
-      '&.Mui-focused': {
-        color: 'white',
-      },
-    },
+    '& .MuiInputLabel-root': { color: 'white' },
     '& .MuiOutlinedInput-root': {
       color: 'white',
-      '& fieldset': {
-        borderColor: 'white',
-        borderWidth: '1px',
-      },
-      '&:hover fieldset': {
-        borderColor: 'white',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: 'white',
-      },
+      '& fieldset': { borderColor: 'white' },
+      '&:hover fieldset': { borderColor: 'white' },
+      '&.Mui-focused fieldset': { borderColor: 'white' },
     },
+    '& .MuiInputBase-input': { color: 'white' },
     '& input::-webkit-calendar-picker-indicator': {
       filter: 'invert(1)',
     },
@@ -102,7 +91,7 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
         />
       </Grid>
       <Grid item xs={12} sm={6}>
-        <CustomTextField
+        <TextField
           label="Payment Date"
           name="paymentDate"
           type="date"
@@ -112,6 +101,7 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
             shrink: true,
           }}
           required
+          fullWidth
           sx={dateFieldSx}
         />
       </Grid>
@@ -160,7 +150,7 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
         />
       </Grid>
       <Grid item xs={12} sm={6}>
-        <CustomTextField
+        <TextField
           label="Pending Amount Due Date"
           name="pendingAmountDueDate"
           type="date"
@@ -169,6 +159,7 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
           InputLabelProps={{
             shrink: true,
           }}
+          fullWidth
           sx={dateFieldSx}
         />
       </Grid>
