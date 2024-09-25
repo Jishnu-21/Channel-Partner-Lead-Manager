@@ -19,17 +19,6 @@ const FinalDetailsForm = ({ leadData, handleChange }) => {
       </Grid>
       <Grid item xs={12}>
         <CustomTextField
-          label="Extra Service Requested By Customer in Meeting"
-          name="extraServiceRequested"
-          value={leadData.extraServiceRequested || ''}
-          onChange={handleChange}
-          multiline
-          rows={4}
-          helperText="Mention all the extra services client has requirements for."
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <CustomTextField
           label="Important Information Missed Out In Form"
           name="importantInformation"
           value={leadData.importantInformation || ''}

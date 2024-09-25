@@ -65,7 +65,7 @@ const LeadForm = () => {
     clientDesignation: '',
     alternateContactNo: '',
     companyOffering: '',
-    servicesRequested: [],
+    servicesRequested: [], // Ensure this is included
     socialMediaManagementRequirement: [],
     websiteDevelopmentRequirement: '',
     brandingRequirement: [],
@@ -179,11 +179,17 @@ const LeadForm = () => {
       case 0:
         return <BasicInfoForm leadData={leadData} handleChange={handleChange} />;
       case 1:
-        return <ServiceDetailsForm leadData={leadData} handleChange={handleChange} />;
+        return (
+          <ServiceDetailsForm 
+            leadData={leadData} 
+            handleChange={handleChange} 
+            setLeadData={setLeadData} // Pass setLeadData to update servicesRequested
+          />
+        );
       case 2:
         return <PaymentDetailsForm leadData={leadData} handleChange={handleChange} />;
       case 3:
-        return <DeadlineForm leadData={leadData} handleChange={handleChange} handleFileChange={handleFileChange} />;
+        return <DeadlineForm leadData={leadData} handleChange={handleChange} selectedServices={leadData.servicesRequested} />;
       case 4:
         return <FinalDetailsForm leadData={leadData} handleChange={handleChange} />;
       default:

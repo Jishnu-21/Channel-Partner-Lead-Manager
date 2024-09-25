@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Grid, 
   FormControl, 
@@ -8,14 +8,37 @@ import {
   Checkbox,
   ListItemText,
   OutlinedInput,
-  Button
+  Button,
+  Typography,
 } from '@mui/material';
-import CustomTextField from './CustomTextField';
 
-const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
+const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadData }) => {
+  const [selectionType, setSelectionType] = useState(''); // 'packages' or 'services'
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [socialMediaRequirements, setSocialMediaRequirements] = useState([]);
+  const [websiteDevelopmentRequirement, setWebsiteDevelopmentRequirement] = useState('');
+  const [brandingRequirements, setBrandingRequirements] = useState([]);
+
+  const packages = ['Shuruvat', 'Unnati'];
   const services = ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design', 'Ecommerce'];
   const socialMediaPlatforms = ['Instagram', 'WhatsApp', 'Youtube', 'Pinterest', 'Linkedin', 'Other'];
   const brandingOptions = ['Logo Creation', 'Brand Positioning', 'Tagline and Slogan', 'Packing and Graphics', 'Other'];
+
+  const handleServiceChange = (event) => {
+    const { value } = event.target;
+    setSelectedServices(value);
+    // Update leadData with selected services
+    setLeadData({ ...leadData, servicesRequested: value }); // Update servicesRequested in leadData
+    // Reset requirements when services change
+    setSocialMediaRequirements([]);
+    setWebsiteDevelopmentRequirement('');
+    setBrandingRequirements([]);
+  };
+
+  const handleSocialMediaChange = (event) => {
+    const { value } = event.target;
+    setSocialMediaRequirements(value);
+  };
 
   const selectSx = {
     mb: 2,
@@ -33,106 +56,149 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
     '& .MuiSvgIcon-root': { color: 'white' },
   };
 
+  const menuProps = {
+    PaperProps: {
+      style: {
+        backgroundColor: '#1e1e1e',
+      },
+    },
+  };
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
         <FormControl fullWidth variant="outlined" sx={selectSx}>
-          <InputLabel id="services-label">Services Requested</InputLabel>
+          <InputLabel id="selection-type-label">Select Type</InputLabel>
           <Select
-            labelId="services-label"
-            multiple
-            name="servicesRequested"
-            value={leadData.servicesRequested}
-            onChange={handleChange}
-            input={<OutlinedInput label="Services Requested" />}
-            renderValue={(selected) => selected.join(', ')}
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  backgroundColor: '#1e1e1e',
-                },
-              },
-            }}
+            labelId="selection-type-label"
+            value={selectionType}
+            onChange={(e) => setSelectionType(e.target.value)}
+            label="Select Type"
+            input={<OutlinedInput label="Select Type" />}
+            MenuProps={menuProps}
           >
-            {services.map((service) => (
-              <MenuItem key={service} value={service}>
-                <Checkbox checked={leadData.servicesRequested.indexOf(service) > -1} />
-                <ListItemText primary={service} style={{ color: 'white' }} />
-              </MenuItem>
-            ))}
+            <MenuItem value="packages" style={{ color: 'white' }}>Packages</MenuItem>
+            <MenuItem value="services" style={{ color: 'white' }}>Services</MenuItem>
           </Select>
         </FormControl>
       </Grid>
 
-      <Grid item xs={12}>
-        <FormControl fullWidth variant="outlined" sx={selectSx}>
-          <InputLabel id="social-media-label">Social Media Management Requirement</InputLabel>
-          <Select
-            labelId="social-media-label"
-            multiple
-            name="socialMediaManagementRequirement"
-            value={leadData.socialMediaManagementRequirement}
-            onChange={handleChange}
-            input={<OutlinedInput label="Social Media Management Requirement" />}
-            renderValue={(selected) => selected.join(', ')}
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  backgroundColor: '#1e1e1e',
-                },
-              },
-            }}
-          >
-            {socialMediaPlatforms.map((platform) => (
-              <MenuItem key={platform} value={platform}>
-                <Checkbox checked={leadData.socialMediaManagementRequirement.indexOf(platform) > -1} />
-                <ListItemText primary={platform} style={{ color: 'white' }} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
+      {selectionType === 'packages' && (
+        <Grid item xs={12}>
+          <FormControl fullWidth variant="outlined" sx={selectSx}>
+            <InputLabel id="package-label">Select Package</InputLabel>
+            <Select
+              labelId="package-label"
+              name="packages"
+              value={leadData.packages || ''}
+              onChange={handleChange}
+              input={<OutlinedInput label="Select Package" />}
+              MenuProps={menuProps}
+            >
+              {packages.map((pkg) => (
+                <MenuItem key={pkg} value={pkg} style={{ color: 'white' }}>{pkg}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+      )}
 
-      <Grid item xs={12}>
-        <CustomTextField
-          label="Website Development Requirement"
-          name="websiteDevelopmentRequirement"
-          value={leadData.websiteDevelopmentRequirement}
-          onChange={handleChange}
-          fullWidth
-          multiline
-          rows={3}
-        />
-      </Grid>
+      {selectionType === 'services' && (
+        <>
+          <Grid item xs={12}>
+            <FormControl fullWidth variant="outlined" sx={selectSx}>
+              <InputLabel id="services-label">Services Requested</InputLabel>
+              <Select
+                labelId="services-label"
+                multiple
+                name="servicesRequested"
+                value={selectedServices}
+                onChange={handleServiceChange}
+                input={<OutlinedInput label="Services Requested" />}
+                renderValue={(selected) => selected.join(', ')}
+                MenuProps={menuProps}
+              >
+                {services.map((service) => (
+                  <MenuItem key={service} value={service} style={{ color: 'white' }}>
+                    <Checkbox checked={selectedServices.indexOf(service) > -1} />
+                    <ListItemText primary={service} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-      <Grid item xs={12}>
-        <FormControl fullWidth variant="outlined" sx={selectSx}>
-          <InputLabel id="branding-label">Branding Requirement</InputLabel>
-          <Select
-            labelId="branding-label"
-            multiple
-            name="brandingRequirement"
-            value={leadData.brandingRequirement}
-            onChange={handleChange}
-            input={<OutlinedInput label="Branding Requirement" />}
-            renderValue={(selected) => selected.join(', ')}
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  backgroundColor: '#1e1e1e',
-                },
-              },
-            }}
-          >
-            {brandingOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                <Checkbox checked={leadData.brandingRequirement.indexOf(option) > -1} />
-                <ListItemText primary={option} style={{ color: 'white' }} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
+          {selectedServices.includes('Social Media Management') && (
+            <Grid item xs={12}>
+              <FormControl fullWidth variant="outlined" sx={selectSx}>
+                <InputLabel id="social-media-label">Social Media Management Requirement</InputLabel>
+                <Select
+                  labelId="social-media-label"
+                  multiple
+                  name="socialMediaManagementRequirement"
+                  value={socialMediaRequirements}
+                  onChange={handleSocialMediaChange}
+                  input={<OutlinedInput label="Social Media Management Requirement" />}
+                  renderValue={(selected) => selected.join(', ')}
+                  MenuProps={menuProps}
+                >
+                  {socialMediaPlatforms.map((platform) => (
+                    <MenuItem key={platform} value={platform} style={{ color: 'white' }}>
+                      <Checkbox checked={socialMediaRequirements.indexOf(platform) > -1} />
+                      <ListItemText primary={platform} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+
+          {selectedServices.includes('Website Development') && (
+            <Grid item xs={12}>
+              <FormControl fullWidth variant="outlined" sx={selectSx}>
+                <InputLabel id="website-development-label">Website Development Requirement</InputLabel>
+                <Select
+                  labelId="website-development-label"
+                  name="websiteDevelopmentRequirement"
+                  value={websiteDevelopmentRequirement}
+                  onChange={(e) => setWebsiteDevelopmentRequirement(e.target.value)}
+                  input={<OutlinedInput label="Website Development Requirement" />}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="React" style={{ color: 'white' }}>React</MenuItem>
+                  <MenuItem value="Wordpress" style={{ color: 'white' }}>Wordpress</MenuItem>
+                  <MenuItem value="Other" style={{ color: 'white' }}>Other</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+
+          {selectedServices.includes('Branding') && (
+            <Grid item xs={12}>
+              <FormControl fullWidth variant="outlined" sx={selectSx}>
+                <InputLabel id="branding-label">Branding Requirement</InputLabel>
+                <Select
+                  labelId="branding-label"
+                  multiple
+                  name="brandingRequirement"
+                  value={brandingRequirements}
+                  onChange={(e) => setBrandingRequirements(e.target.value)}
+                  input={<OutlinedInput label="Branding Requirement" />}
+                  renderValue={(selected) => selected.join(', ')}
+                  MenuProps={menuProps}
+                >
+                  {brandingOptions.map((option) => (
+                    <MenuItem key={option} value={option} style={{ color: 'white' }}>
+                      <Checkbox checked={brandingRequirements.indexOf(option) > -1} />
+                      <ListItemText primary={option} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+        </>
+      )}
 
       <Grid item xs={12}>
         <input
@@ -160,7 +226,9 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
           </Button>
         </label>
         {leadData.quotationFile && (
-          <p style={{ color: 'white', marginTop: '8px' }}>File selected: {leadData.quotationFile.name}</p>
+          <Typography variant="body2" sx={{ color: 'white', marginTop: '8px' }}>
+            File selected: {leadData.quotationFile.name}
+          </Typography>
         )}
       </Grid>
     </Grid>

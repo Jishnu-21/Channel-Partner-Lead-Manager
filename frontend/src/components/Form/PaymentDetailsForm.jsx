@@ -7,7 +7,9 @@ import {
   MenuItem,
   OutlinedInput,
   Button,
-  TextField
+  TextField,
+  Typography,
+  Box
 } from '@mui/material';
 import CustomTextField from './CustomTextField';
 
@@ -46,167 +48,104 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-        <CustomTextField
-          label="Total Service Fees Charged"
-          name="totalServiceFeesCharged"
-          type="number"
-          value={leadData.totalServiceFeesCharged || ''}
-          onChange={handleChange}
-          required
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <FormControl fullWidth variant="outlined" sx={selectSx}>
-          <InputLabel id="gst-bill-label">GST Bill</InputLabel>
-          <Select
-            labelId="gst-bill-label"
-            label="GST Bill"
-            name="gstBill"
-            value={leadData.gstBill || ''}
-            onChange={handleChange}
-            required
-            input={<OutlinedInput label="GST Bill" />}
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  backgroundColor: '#1e1e1e',
-                },
-              },
-            }}
-          >
-            <MenuItem value="Yes" style={{ color: 'white' }}>Yes</MenuItem>
-            <MenuItem value="No" style={{ color: 'white' }}>No</MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <CustomTextField
-          label="Amount Without GST"
-          name="amountWithoutGST"
-          type="number"
-          value={leadData.amountWithoutGST || ''}
-          onChange={handleChange}
-          required
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          label="Payment Date"
-          name="paymentDate"
-          type="date"
-          value={leadData.paymentDate || ''}
-          onChange={handleChange}
-          InputLabelProps={{
-            shrink: true,
-          }}
-          required
-          fullWidth
-          sx={dateFieldSx}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <FormControl fullWidth variant="outlined" sx={selectSx}>
-          <InputLabel id="payment-done-label">Payment Done</InputLabel>
-          <Select
-            labelId="payment-done-label"
-            label="Payment Done"
-            name="paymentDone"
-            value={leadData.paymentDone || ''}
-            onChange={handleChange}
-            required
-            input={<OutlinedInput label="Payment Done" />}
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  backgroundColor: '#1e1e1e',
-                },
-              },
-            }}
-          >
-            <MenuItem value="Full In Advance" style={{ color: 'white' }}>Full In Advance</MenuItem>
-            <MenuItem value="Partial Payment" style={{ color: 'white' }}>Partial Payment</MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <CustomTextField
-          label="Actual Amount Received"
-          name="actualAmountReceived"
-          type="number"
-          value={leadData.actualAmountReceived || ''}
-          onChange={handleChange}
-          required
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <CustomTextField
-          label="Pending Amount"
-          name="pendingAmount"
-          type="number"
-          value={leadData.pendingAmount || ''}
-          onChange={handleChange}
-          required
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          label="Pending Amount Due Date"
-          name="pendingAmountDueDate"
-          type="date"
-          value={leadData.pendingAmountDueDate || ''}
-          onChange={handleChange}
-          InputLabelProps={{
-            shrink: true,
-          }}
-          fullWidth
-          sx={dateFieldSx}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <FormControl fullWidth variant="outlined" sx={selectSx}>
-          <InputLabel id="payment-mode-label">Payment Mode</InputLabel>
-          <Select
-            labelId="payment-mode-label"
-            label="Payment Mode"
-            name="paymentMode"
-            value={leadData.paymentMode || ''}
-            onChange={handleChange}
-            required
-            input={<OutlinedInput label="Payment Mode" />}
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  backgroundColor: '#1e1e1e',
-                },
-              },
-            }}
-          >
-            {paymentModes.map((mode) => (
-              <MenuItem key={mode} value={mode} style={{ color: 'white' }}>{mode}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      {leadData.paymentDone === 'Partial Payment' && (
-        <Grid item xs={12}>
-          <input
-            accept="image/*"
-            style={{ display: 'none' }}
-            id="proof-of-approval"
-            type="file"
-            onChange={(e) => handleFileChange(e, 'proofOfApprovalForPartialPayment')}
-          />
-          <label htmlFor="proof-of-approval">
-            <Button variant="contained" component="span">
-              Upload Proof of Approval for Partial Payment
-            </Button>
-          </label>
-          {leadData.proofOfApprovalForPartialPayment && (
-            <p>File selected: {leadData.proofOfApprovalForPartialPayment.name}</p>
+      {[ 
+        { name: 'totalServiceFeesCharged', label: 'Total Service Fees Charged', type: 'number' },
+        { name: 'gstBill', label: 'GST Bill', type: 'select', options: ['Yes', 'No'] },
+        { name: 'amountWithoutGST', label: 'Amount Without GST', type: 'number' },
+        { name: 'paymentDate', label: 'Payment Date', type: 'date' },
+        { name: 'paymentDone', label: 'Payment Done', type: 'select', options: ['Full In Advance', 'Partial Payment'] },
+        { name: 'actualAmountReceived', label: 'Actual Amount Received', type: 'number' },
+        { name: 'pendingAmount', label: 'Pending Amount', type: 'number' },
+        { name: 'pendingAmountDueDate', label: 'Pending Amount Due Date', type: 'date' },
+        { name: 'paymentMode', label: 'Payment Mode', type: 'select', options: paymentModes },
+      ].map((field) => (
+        <Grid item xs={12} sm={6} key={field.name}>
+          {field.type === 'select' ? (
+            <FormControl fullWidth variant="outlined" sx={selectSx}>
+              <InputLabel id={`${field.name}-label`}>{field.label}</InputLabel>
+              <Select
+                labelId={`${field.name}-label`}
+                label={field.label}
+                name={field.name}
+                value={leadData[field.name] || ''}
+                onChange={handleChange}
+                required
+                input={<OutlinedInput label={field.label} />}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      backgroundColor: '#1e1e1e',
+                    },
+                  },
+                }}
+              >
+                {field.options.map((option) => (
+                  <MenuItem key={option} value={option} style={{ color: 'white' }}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : field.type === 'date' ? (
+            <TextField
+              label={field.label}
+              name={field.name}
+              type="date"
+              value={leadData[field.name] || ''}
+              onChange={handleChange}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              required
+              fullWidth
+              sx={dateFieldSx}
+            />
+          ) : (
+            <CustomTextField
+              label={field.label}
+              name={field.name}
+              type={field.type}
+              value={leadData[field.name] || ''}
+              onChange={handleChange}
+              required
+            />
           )}
         </Grid>
-      )}
+      ))}
+
+      {/* Payment Proof Upload for both Full and Partial Payments */}
+      <Grid item xs={12}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
+          <input
+            accept="image/*,application/pdf"
+            style={{ display: 'none' }}
+            id="payment-proof"
+            type="file"
+            onChange={(e) => handleFileChange(e, 'paymentProof')}
+          />
+          <label htmlFor="payment-proof">
+            <Button 
+              variant="contained" 
+              component="span" 
+              fullWidth
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)', // Match the style
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)', // Match hover effect
+                },
+              }}
+            >
+              Upload Payment Proof
+            </Button>
+          </label>
+          {leadData.paymentProof && (
+            <Typography variant="body2" sx={{ color: 'white', marginTop: '8px' }}>
+              File selected: {leadData.paymentProof.name}
+            </Typography>
+          )}
+        </Box>
+      </Grid>
     </Grid>
   );
 };

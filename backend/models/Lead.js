@@ -37,6 +37,10 @@ const leadSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    Packages:{
+        type: [String],
+        enum: ['Shuruvat', 'Unnati'],
+    },
     servicesRequested: {
         type: [String],
         enum: ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design', 'Ecommerce'],
@@ -48,6 +52,7 @@ const leadSchema = new mongoose.Schema({
     },
     websiteDevelopmentRequirement: {
         type: String,
+        enum: ['React', 'Wordpress', 'Other'],
     },
     brandingRequirement: {
         type: [String],

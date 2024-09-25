@@ -32,7 +32,7 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6}>
         <CustomTextField
-          label="Email"
+          label="BDA Email"
           name="email"
           value={leadData.email}
           onChange={handleChange}
@@ -125,8 +125,8 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
       </Grid>
       <Grid item xs={12}>
         <CustomTextField
-          label="Company's Offering"
-          name="companyOffering"
+          label="Company's Business"
+          name="companyBusiness"
           value={leadData.companyOffering}
           onChange={handleChange}
           required
