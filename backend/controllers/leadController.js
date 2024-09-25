@@ -1,8 +1,6 @@
 const Lead = require('../models/Lead');
 const ChannelPartner = require('../models/ChannelPartner'); 
 
-
-
 // @desc    Create a new lead
 // @route   POST /api/leads
 // @access  Public
@@ -37,8 +35,6 @@ const createLead = async (req, res) => {
         if (existingLead) {
             return res.status(409).json({ message: 'Lead already exists with the same details.' });
         }
-
-        // Create a new lead
         const newLead = new Lead(req.body);
         const savedLead = await newLead.save();
 
@@ -62,6 +58,7 @@ const getLeads = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 module.exports = {

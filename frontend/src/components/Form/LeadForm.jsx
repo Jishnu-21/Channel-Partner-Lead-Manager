@@ -3,55 +3,191 @@ import {
   Box, 
   Button, 
   Container, 
-  MenuItem, 
   Typography, 
-  Select, 
-  FormControl, 
-  InputLabel 
+  Stepper,
+  Step,
+  StepLabel
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { toast } from 'sonner'; 
-import CustomTextField from './CustomTextField'; 
 import { API_URL } from '../../config.jsx';
+import BasicInfoForm from './BasicInfoForm';
+import ServiceDetailsForm from './ServiceDetailForm.jsx';
+import DeadlineForm from './DeadlineForm.jsx';
+import PaymentDetailsForm from './PaymentDetailsForm.jsx';
+import FinalDetailsForm from './FinalDetailsForm.jsx';
+
+// Custom styled components for white labels with improved visibility
+const WhiteStepLabel = styled(StepLabel)(({ theme }) => ({
+  '& .MuiStepLabel-label': {
+    color: 'white',
+    fontWeight: 'bold',
+    '&.Mui-active': {
+      color: theme.palette.primary.main,
+    },
+    '&.Mui-completed': {
+      color: theme.palette.success.main,
+    },
+  },
+  '& .MuiStepIcon-root': {
+    color: 'rgba(255, 255, 255, 0.5)',
+    '&.Mui-active': {
+      color: theme.palette.primary.main,
+    },
+    '&.Mui-completed': {
+      color: theme.palette.success.main,
+    },
+  },
+}));
+
+const WhiteStepper = styled(Stepper)(({ theme }) => ({
+  '& .MuiStepConnector-line': {
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
+    borderColor: theme.palette.primary.main,
+  },
+  '& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line': {
+    borderColor: theme.palette.success.main,
+  },
+}));
 
 const LeadForm = () => {
+  const [activeStep, setActiveStep] = useState(0);
   const [leadData, setLeadData] = useState({
-    channelPartnerCode: '',
-    leadName: '',
     contactNumber: '',
     email: '',
-    leadSource: '',
-    leadInterest: '',
-    additionalNotes: '',
+    bdaName: '',
+    companyName: '',
+    clientName: '',
+    clientEmail: '',
+    clientDesignation: '',
+    alternateContactNo: '',
+    companyOffering: '',
+    servicesRequested: [],
+    socialMediaManagementRequirement: [],
+    websiteDevelopmentRequirement: '',
+    brandingRequirement: [],
+    quotationFile: null,
+    tentativeDeadlineByCustomer: '',
+    tentativeDateGivenByBDAToCustomer: '',
+    totalServiceFeesCharged: '',
+    gstBill: '',
+    amountWithoutGST: '',
+    paymentDate: '',
+    paymentDone: '',
+    proofOfApprovalForPartialPayment: null,
+    actualAmountReceived: '',
+    pendingAmount: '',
+    pendingAmountDueDate: '',
+    paymentMode: '',
+    servicePromisedByBDA: '',
+    extraServiceRequested: '',
+    importantInformation: '',
   });
 
-  const leadSources = ['Social Media', 'Referral', 'Website', 'Advertisement', 'Event'];
-
   const handleChange = (e) => {
-    setLeadData({
-      ...leadData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value, type, checked, files } = e.target;
+    if (type === 'checkbox') {
+      const updatedArray = checked
+        ? [...leadData[name], value]
+        : leadData[name].filter(item => item !== value);
+      setLeadData({ ...leadData, [name]: updatedArray });
+    } else if (type === 'file') {
+      setLeadData({ ...leadData, [name]: files[0] });
+    } else {
+      setLeadData({ ...leadData, [name]: value });
+    }
+  };
+
+  const handleFileChange = (e, fieldName) => {
+    setLeadData({ ...leadData, [fieldName]: e.target.files[0] });
+  };
+
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_URL}/leads`, leadData);
+      const formData = new FormData();
+      Object.keys(leadData).forEach(key => {
+        if (key === 'quotationFile' || key === 'proofOfApprovalForPartialPayment') {
+          formData.append(key, leadData[key]);
+        } else if (Array.isArray(leadData[key])) {
+          leadData[key].forEach(value => formData.append(`${key}[]`, value));
+        } else if (key === 'tentativeDeadlineByCustomer' || key === 'tentativeDateGivenByBDAToCustomer' || key === 'paymentDate' || key === 'pendingAmountDueDate') {
+          // Convert date strings to ISO format
+          formData.append(key, new Date(leadData[key]).toISOString());
+        } else {
+          formData.append(key, leadData[key]);
+        }
+      });
+
+      const response = await axios.post(`${API_URL}/leads`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       toast.success('Lead submitted successfully!');
       console.log('Lead created:', response.data);
+      // Reset form fields and go back to first step
       setLeadData({
-        channelPartnerCode: '',
-        leadName: '',
         contactNumber: '',
         email: '',
-        leadSource: '',
-        leadInterest: '',
-        additionalNotes: '',
+        bdaName: '',
+        companyName: '',
+        clientName: '',
+        clientEmail: '',
+        clientDesignation: '',
+        alternateContactNo: '',
+        companyOffering: '',
+        servicesRequested: [],
+        socialMediaManagementRequirement: [],
+        websiteDevelopmentRequirement: '',
+        brandingRequirement: [],
+        quotationFile: null,
+        tentativeDeadlineByCustomer: '',
+        tentativeDateGivenByBDAToCustomer: '',
+        totalServiceFeesCharged: '',
+        gstBill: '',
+        amountWithoutGST: '',
+        paymentDate: '',
+        paymentDone: '',
+        proofOfApprovalForPartialPayment: null,
+        actualAmountReceived: '',
+        pendingAmount: '',
+        pendingAmountDueDate: '',
+        paymentMode: '',
+        servicePromisedByBDA: '',
+        extraServiceRequested: '',
+        importantInformation: '',
       });
+      setActiveStep(0);
     } catch (error) {
       toast.error(error.response?.data?.message || 'An error occurred while submitting the lead.');
       console.error('Error creating lead:', error);
+    }
+  };
+
+  const renderStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return <BasicInfoForm leadData={leadData} handleChange={handleChange} />;
+      case 1:
+        return <ServiceDetailsForm leadData={leadData} handleChange={handleChange} />;
+      case 2:
+        return <PaymentDetailsForm leadData={leadData} handleChange={handleChange} />;
+      case 3:
+        return <DeadlineForm leadData={leadData} handleChange={handleChange} handleFileChange={handleFileChange} />;
+      case 4:
+        return <FinalDetailsForm leadData={leadData} handleChange={handleChange} />;
+      default:
+        return 'Unknown step';
     }
   };
 
@@ -64,128 +200,63 @@ const LeadForm = () => {
       sx={{ 
         minHeight: '100vh', 
         bgcolor: 'transparent',
-        paddingX: { xs: 2, sm: 4 }, // Responsive padding
+        paddingX: { xs: 1, sm: 2 },
       }}
     >
-      <Container maxWidth="sm">
+      <Container maxWidth="md">
         <Typography 
-          variant="h4" 
+          variant="h5" 
           component="h1" 
           align="center" 
           gutterBottom 
           sx={{ 
             color: 'white', 
-            fontSize: { xs: '1.5rem', sm: '2rem' } // Responsive font size
+            fontSize: { xs: '1.2rem', sm: '1.5rem' }
           }}
         >
-          Lead Submission Form
+          Order Punching Form
         </Typography>
+        <WhiteStepper activeStep={activeStep} sx={{ mb: 4 }}>
+          <Step>
+            <WhiteStepLabel>Basic Information</WhiteStepLabel>
+          </Step>
+          <Step>
+            <WhiteStepLabel>Service Details</WhiteStepLabel>
+          </Step>
+          <Step>
+            <WhiteStepLabel>Payment Details</WhiteStepLabel>
+          </Step>
+          <Step>
+            <WhiteStepLabel>Deadline information</WhiteStepLabel>
+          </Step>
+          <Step>
+            <WhiteStepLabel>Final Details</WhiteStepLabel>
+          </Step>
+        </WhiteStepper>
         <form onSubmit={handleSubmit} style={{ color: 'white' }}>
-          <CustomTextField
-            label="Channel Partner Code"
-            name="channelPartnerCode"
-            value={leadData.channelPartnerCode}
-            onChange={handleChange}
-            required
-          />
-
-          <CustomTextField
-            label="Lead Name"
-            name="leadName"
-            value={leadData.leadName}
-            onChange={handleChange}
-            required
-          />
-
-          <CustomTextField
-            label="Contact Number"
-            name="contactNumber"
-            value={leadData.contactNumber}
-            onChange={handleChange}
-            required
-            type="number"
-          />
-
-          <CustomTextField
-            label="Email"
-            name="email"
-            value={leadData.email}
-            onChange={handleChange}
-            required
-            type="email"
-          />
-
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel sx={{ color: 'white' }}>Lead Source</InputLabel>
-            <Select
-              label="Lead Source"
-              name="leadSource"
-              value={leadData.leadSource}
-              onChange={handleChange}
-              required
-              sx={{
-                color: 'white',
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                '& .MuiSvgIcon-root': { color: 'white' },
-                '& .MuiSelect-select': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  '&:focus': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                },
-              }}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    bgcolor: 'rgba(0, 0, 0, 0.9)',
-                    '& .MuiMenuItem-root': {
-                      color: 'white',
-                      '&.Mui-selected': { bgcolor: 'rgba(255, 255, 255, 0.1)' },
-                      '&.Mui-selected:hover': { bgcolor: 'rgba(255, 255, 255, 0.2)' },
-                    },
-                  },
-                },
+          {renderStepContent(activeStep)}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            <Button
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              sx={{ color: 'white' }}
+            >
+              Back
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={activeStep === 4 ? handleSubmit : handleNext}
+              sx={{ 
+                py: 1.5, 
+                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                backgroundColor: 'white', 
+                color: 'black' 
               }}
             >
-              {leadSources.map((source) => (
-                <MenuItem key={source} value={source}>
-                  {source}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <CustomTextField
-            label="Lead Interest"
-            name="leadInterest"
-            value={leadData.leadInterest}
-            onChange={handleChange}
-            required
-          />
-
-          <CustomTextField
-            label="Additional Notes"
-            name="additionalNotes"
-            value={leadData.additionalNotes}
-            onChange={handleChange}
-            multiline
-            rows={4}
-          />
-
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ 
-              py: 2, 
-              fontSize: { xs: '0.8rem', sm: '1rem' }, // Responsive font size for button
-              backgroundColor: 'white', 
-              color: 'black' 
-            }}
-          >
-            Submit Lead
-          </Button>
+              {activeStep === 4 ? 'Submit' : 'Next'}
+            </Button>
+          </Box>
         </form>
       </Container>
     </Box>
