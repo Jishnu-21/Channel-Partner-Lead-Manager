@@ -10,9 +10,10 @@ import {
   OutlinedInput,
   Button,
   Typography,
+  FormHelperText,
 } from '@mui/material';
 
-const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadData }) => {
+const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadData, setErrors }) => {
   const [selectionType, setSelectionType] = useState('');
   const [selectedServices, setSelectedServices] = useState([]);
   const [socialMediaRequirements, setSocialMediaRequirements] = useState([]);
@@ -21,10 +22,11 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
   const [packageType, setPackageType] = useState('');
   const [ecommerceListingPlatforms, setEcommerceListingPlatforms] = useState([]);
   const [quickCommercePlatforms, setQuickCommercePlatforms] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
 
   const packages = ['Shuruvat', 'Unnati'];
   const packageTypes = ['Silver', 'Gold', 'Platinum'];
-  const services = ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing','Ecommerce Listing', 'Quick Commerce', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design', ];
+  const services = ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing','Ecommerce Listing', 'Quick Commerce', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design'];
   const socialMediaPlatforms = ['Instagram', 'WhatsApp', 'Youtube', 'Pinterest', 'Linkedin', 'Other'];
   const brandingOptions = ['Logo Creation', 'Brand Positioning', 'Tagline and Slogan', 'Packing and Graphics', 'Other'];
   const ecommercePlatforms = ['Amazon', 'Flipkart', 'Nykaa', 'Myntra'];
@@ -47,6 +49,60 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
     setEcommerceListingPlatforms([]);
     setQuickCommercePlatforms([]);
   }, [selectionType, setLeadData]);
+
+  useEffect(() => {
+    validateForm();
+  }, [selectionType, leadData, selectedServices, socialMediaRequirements, websiteDevelopmentRequirement, brandingRequirements, packageType, ecommerceListingPlatforms, quickCommercePlatforms]);
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!selectionType) {
+      errors.selectionType = 'Please select a type';
+    }
+
+    if (selectionType === 'packages') {
+      if (!leadData.packages) {
+        errors.packages = 'Please select a package';
+      }
+      if ((leadData.packages === 'Shuruvat' || leadData.packages === 'Unnati') && !packageType) {
+        errors.packageType = 'Please select a package type';
+      }
+    }
+
+    if (selectionType === 'services') {
+      if (selectedServices.length === 0) {
+        errors.servicesRequested = 'Please select at least one service';
+      }
+      if (selectedServices.includes('Social Media Management') && socialMediaRequirements.length === 0) {
+        errors.socialMediaManagementRequirement = 'Please select social media platforms';
+      }
+      if (selectedServices.includes('Website Development') && !websiteDevelopmentRequirement) {
+        errors.websiteDevelopmentRequirement = 'Please select a website development requirement';
+      }
+      if (selectedServices.includes('Branding') && brandingRequirements.length === 0) {
+        errors.brandingRequirement = 'Please select branding requirements';
+      }
+      if (selectedServices.includes('Ecommerce Listing') && ecommerceListingPlatforms.length === 0) {
+        errors.ecommerceListingPlatforms = 'Please select ecommerce listing platforms';
+      }
+      if (selectedServices.includes('Quick Commerce') && quickCommercePlatforms.length === 0) {
+        errors.quickCommercePlatforms = 'Please select quick commerce platforms';
+      }
+    }
+
+    if (selectionType && !leadData.quotationFile) {
+      errors.quotationFile = 'Please upload a quotation file';
+    }
+
+    setFormErrors(errors);
+    if (typeof setErrors === 'function') {
+      setErrors(prevErrors => ({ ...prevErrors, serviceDetails: errors }));
+    } else {
+      console.error('setErrors is not a function');
+    }
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSelectionTypeChange = (event) => {
     setSelectionType(event.target.value);
@@ -146,7 +202,7 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <FormControl fullWidth variant="outlined" sx={selectSx}>
+        <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.selectionType}>
           <InputLabel id="selection-type-label">Select Type</InputLabel>
           <Select
             labelId="selection-type-label"
@@ -159,13 +215,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
             <MenuItem value="packages" style={{ color: 'white' }}>Packages</MenuItem>
             <MenuItem value="services" style={{ color: 'white' }}>Services</MenuItem>
           </Select>
+          {formErrors.selectionType && <FormHelperText>{formErrors.selectionType}</FormHelperText>}
         </FormControl>
       </Grid>
 
       {selectionType === 'packages' && (
         <>
           <Grid item xs={12}>
-            <FormControl fullWidth variant="outlined" sx={selectSx}>
+            <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.packages}>
               <InputLabel id="package-label">Select Package</InputLabel>
               <Select
                 labelId="package-label"
@@ -179,12 +236,13 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                   <MenuItem key={pkg} value={pkg} style={{ color: 'white' }}>{pkg}</MenuItem>
                 ))}
               </Select>
+              {formErrors.packages && <FormHelperText>{formErrors.packages}</FormHelperText>}
             </FormControl>
           </Grid>
 
           {(leadData.packages === 'Shuruvat' || leadData.packages === 'Unnati') && (
             <Grid item xs={12}>
-              <FormControl fullWidth variant="outlined" sx={selectSx}>
+              <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.packageType}>
                 <InputLabel id="package-type-label">Package Type</InputLabel>
                 <Select
                   labelId="package-type-label"
@@ -198,6 +256,7 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                     <MenuItem key={type} value={type} style={{ color: 'white' }}>{type}</MenuItem>
                   ))}
                 </Select>
+                {formErrors.packageType && <FormHelperText>{formErrors.packageType}</FormHelperText>}
               </FormControl>
             </Grid>
           )}
@@ -207,7 +266,7 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
       {selectionType === 'services' && (
         <>
           <Grid item xs={12}>
-            <FormControl fullWidth variant="outlined" sx={selectSx}>
+            <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.servicesRequested}>
               <InputLabel id="services-label">Services Requested</InputLabel>
               <Select
                 labelId="services-label"
@@ -226,12 +285,13 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                   </MenuItem>
                 ))}
               </Select>
+              {formErrors.servicesRequested && <FormHelperText>{formErrors.servicesRequested}</FormHelperText>}
             </FormControl>
           </Grid>
 
           {selectedServices.includes('Social Media Management') && (
             <Grid item xs={12}>
-              <FormControl fullWidth variant="outlined" sx={selectSx}>
+              <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.socialMediaManagementRequirement}>
                 <InputLabel id="social-media-label">Social Media Management Requirement</InputLabel>
                 <Select
                   labelId="social-media-label"
@@ -250,13 +310,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                     </MenuItem>
                   ))}
                 </Select>
+                {formErrors.socialMediaManagementRequirement && <FormHelperText>{formErrors.socialMediaManagementRequirement}</FormHelperText>}
               </FormControl>
             </Grid>
           )}
 
           {selectedServices.includes('Website Development') && (
             <Grid item xs={12}>
-              <FormControl fullWidth variant="outlined" sx={selectSx}>
+              <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.websiteDevelopmentRequirement}>
                 <InputLabel id="website-development-label">Website Development Requirement</InputLabel>
                 <Select
                   labelId="website-development-label"
@@ -276,13 +337,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                   <MenuItem value="Wordpress" style={{ color: 'white' }}>Wordpress</MenuItem>
                   <MenuItem value="Other" style={{ color: 'white' }}>Other</MenuItem>
                 </Select>
+                {formErrors.websiteDevelopmentRequirement && <FormHelperText>{formErrors.websiteDevelopmentRequirement}</FormHelperText>}
               </FormControl>
             </Grid>
           )}
 
           {selectedServices.includes('Branding') && (
             <Grid item xs={12}>
-              <FormControl fullWidth variant="outlined" sx={selectSx}>
+              <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.brandingRequirement}>
                 <InputLabel id="branding-label">Branding Requirement</InputLabel>
                 <Select
                   labelId="branding-label"
@@ -307,13 +369,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                     </MenuItem>
                   ))}
                 </Select>
+                {formErrors.brandingRequirement && <FormHelperText>{formErrors.brandingRequirement}</FormHelperText>}
               </FormControl>
             </Grid>
           )}
 
           {selectedServices.includes('Ecommerce Listing') && (
             <Grid item xs={12}>
-              <FormControl fullWidth variant="outlined" sx={selectSx}>
+              <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.ecommerceListingPlatforms}>
                 <InputLabel id="ecommerce-listing-label">Ecommerce Listing Platforms</InputLabel>
                 <Select
                   labelId="ecommerce-listing-label"
@@ -332,13 +395,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                     </MenuItem>
                   ))}
                 </Select>
+                {formErrors.ecommerceListingPlatforms && <FormHelperText>{formErrors.ecommerceListingPlatforms}</FormHelperText>}
               </FormControl>
             </Grid>
           )}
 
           {selectedServices.includes('Quick Commerce') && (
             <Grid item xs={12}>
-              <FormControl fullWidth variant="outlined" sx={selectSx}>
+              <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.quickCommercePlatforms}>
                 <InputLabel id="quick-commerce-label">Quick Commerce Platforms</InputLabel>
                 <Select
                   labelId="quick-commerce-label"
@@ -357,43 +421,49 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                     </MenuItem>
                   ))}
                 </Select>
+                {formErrors.quickCommercePlatforms && <FormHelperText>{formErrors.quickCommercePlatforms}</FormHelperText>}
               </FormControl>
             </Grid>
           )}
         </>
       )}
 
-      <Grid item xs={12}>
-        <input
-          accept="image/*,application/pdf"
-          style={{ display: 'none' }}
-          id="quotation-file"
-          type="file"
-          onChange={(e) => handleFileChange(e, 'quotationFile')}
-          name="quotationFile"
-        />
-        <label htmlFor="quotation-file">
-          <Button 
-            variant="contained" 
-            component="span" 
-            fullWidth
-            sx={{
-              backgroundColor: leadData.quotationFile ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: leadData.quotationFile ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
-              },
-            }}
-          >
-            {leadData.quotationFile ? 'Quotation File Added' : 'Upload Quotation (PDF or Image)'}
-          </Button>
-        </label>
-        {leadData.quotationFile && (
-          <Typography variant="body2" sx={{ color: 'white', marginTop: '8px' }}>
-            File selected: {leadData.quotationFile.name}
-          </Typography>
-        )}
-      </Grid>
+      {selectionType && (
+        <Grid item xs={12}>
+          <input
+            accept="image/*,application/pdf"
+            style={{ display: 'none' }}
+            id="quotation-file"
+            type="file"
+            onChange={(e) => handleFileChange(e, 'quotationFile')}
+            name="quotationFile"
+          />
+          <label htmlFor="quotation-file">
+            <Button 
+              variant="contained" 
+              component="span" 
+              fullWidth
+              sx={{
+                backgroundColor: leadData.quotationFile ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: leadData.quotationFile ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
+                },
+              }}
+            >
+              {leadData.quotationFile ? 'Quotation File Added' : 'Upload Quotation (PDF or Image)'}
+            </Button>
+          </label>
+          {leadData.quotationFile && (
+            <Typography variant="body2" sx={{ color: 'white', marginTop: '8px' }}>
+              File selected: {leadData.quotationFile.name}
+            </Typography>
+          )}
+          {formErrors.quotationFile && (
+            <FormHelperText error>{formErrors.quotationFile}</FormHelperText>
+          )}
+        </Grid>
+      )}
     </Grid>
   );
 };

@@ -7,11 +7,12 @@ import {
   MenuItem,
   OutlinedInput,
   useMediaQuery,
-  useTheme
+  useTheme,
+  FormHelperText
 } from '@mui/material';
 import CustomTextField from './CustomTextField';
 
-const BasicInfoForm = ({ leadData, handleChange }) => {
+const BasicInfoForm = ({ leadData, handleChange, errors }) => {
   const bdaNames = ['Deepak Wagh', 'Ashutosh Singh', 'Deboshree Nayak', 'Founder'];
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -42,10 +43,12 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
           onChange={handleChange}
           required
           type="email"
+          error={!!errors.email}
+          helperText={errors.email}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
-        <FormControl fullWidth variant="outlined" sx={selectSx}>
+        <FormControl fullWidth variant="outlined" sx={selectSx} error={!!errors.bdaName}>
           <InputLabel id="bda-name-label">BDA Name</InputLabel>
           <Select
             labelId="bda-name-label"
@@ -69,6 +72,7 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
               </MenuItem>
             ))}
           </Select>
+          {errors.bdaName && <FormHelperText>{errors.bdaName}</FormHelperText>}
         </FormControl>
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -78,6 +82,8 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
           value={leadData.companyName}
           onChange={handleChange}
           required
+          error={!!errors.companyName}
+          helperText={errors.companyName}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -87,6 +93,8 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
           value={leadData.clientName}
           onChange={handleChange}
           required
+          error={!!errors.clientName}
+          helperText={errors.clientName}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -97,6 +105,8 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
           onChange={handleChange}
           required
           type="email"
+          error={!!errors.clientEmail}
+          helperText={errors.clientEmail}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -106,6 +116,8 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
           value={leadData.clientDesignation}
           onChange={handleChange}
           required
+          error={!!errors.clientDesignation}
+          helperText={errors.clientDesignation}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -116,6 +128,8 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
           onChange={handleChange}
           required
           type="tel"
+          error={!!errors.contactNumber}
+          helperText={errors.contactNumber}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -130,10 +144,12 @@ const BasicInfoForm = ({ leadData, handleChange }) => {
       <Grid item xs={12}>
         <CustomTextField
           label="Company's Business"
-          name="companyBusiness"
+          name="companyOffering"
           value={leadData.companyOffering}
           onChange={handleChange}
           required
+          error={!!errors.companyOffering}
+          helperText={errors.companyOffering}
         />
       </Grid>
     </Grid>
