@@ -50,7 +50,7 @@ const leadSchema = new mongoose.Schema({
   },
   servicesRequested: {
     type: [String],
-    enum: ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design', 'Ecommerce'],
+    enum: ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design', 'Ecommerce Listing','Quick Commerce'],
   },
   socialMediaManagementRequirement: {
     type: [String],

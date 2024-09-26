@@ -13,21 +13,24 @@ import {
 } from '@mui/material';
 
 const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadData }) => {
-  const [selectionType, setSelectionType] = useState(''); // 'packages' or 'services'
+  const [selectionType, setSelectionType] = useState('');
   const [selectedServices, setSelectedServices] = useState([]);
   const [socialMediaRequirements, setSocialMediaRequirements] = useState([]);
   const [websiteDevelopmentRequirement, setWebsiteDevelopmentRequirement] = useState('');
   const [brandingRequirements, setBrandingRequirements] = useState([]);
   const [packageType, setPackageType] = useState('');
+  const [ecommerceListingPlatforms, setEcommerceListingPlatforms] = useState([]);
+  const [quickCommercePlatforms, setQuickCommercePlatforms] = useState([]);
 
   const packages = ['Shuruvat', 'Unnati'];
   const packageTypes = ['Silver', 'Gold', 'Platinum'];
-  const services = ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design', 'Ecommerce'];
+  const services = ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing','Ecommerce Listing', 'Quick Commerce', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design', ];
   const socialMediaPlatforms = ['Instagram', 'WhatsApp', 'Youtube', 'Pinterest', 'Linkedin', 'Other'];
   const brandingOptions = ['Logo Creation', 'Brand Positioning', 'Tagline and Slogan', 'Packing and Graphics', 'Other'];
+  const ecommercePlatforms = ['Amazon', 'Flipkart', 'Nykaa', 'Myntra'];
+  const quickCommercePlatformOptions = ['Zepto', 'Blinkit', 'Dunzo'];
 
   useEffect(() => {
-    // Reset deadline-related fields when selection type changes
     setLeadData(prevData => ({
       ...prevData,
       websiteDevelopmentTime: '',
@@ -36,9 +39,13 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
       packages: '',
       packageType: '',
       servicesRequested: [],
+      ecommerceListingPlatforms: [],
+      quickCommercePlatforms: [],
     }));
     setPackageType('');
     setSelectedServices([]);
+    setEcommerceListingPlatforms([]);
+    setQuickCommercePlatforms([]);
   }, [selectionType, setLeadData]);
 
   const handleSelectionTypeChange = (event) => {
@@ -58,6 +65,12 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
     setSocialMediaRequirements([]);
     setWebsiteDevelopmentRequirement('');
     setBrandingRequirements([]);
+    if (!value.includes('Ecommerce Listing')) {
+      setEcommerceListingPlatforms([]);
+    }
+    if (!value.includes('Quick Commerce')) {
+      setQuickCommercePlatforms([]);
+    }
   };
 
   const handleSocialMediaChange = (event) => {
@@ -85,6 +98,24 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
     setLeadData(prevData => ({
       ...prevData,
       packageType: value,
+    }));
+  };
+
+  const handleEcommerceListingChange = (event) => {
+    const { value } = event.target;
+    setEcommerceListingPlatforms(value);
+    setLeadData(prevData => ({
+      ...prevData,
+      ecommerceListingPlatforms: value,
+    }));
+  };
+
+  const handleQuickCommerceChange = (event) => {
+    const { value } = event.target;
+    setQuickCommercePlatforms(value);
+    setLeadData(prevData => ({
+      ...prevData,
+      quickCommercePlatforms: value,
     }));
   };
 
@@ -279,10 +310,60 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
               </FormControl>
             </Grid>
           )}
+
+          {selectedServices.includes('Ecommerce Listing') && (
+            <Grid item xs={12}>
+              <FormControl fullWidth variant="outlined" sx={selectSx}>
+                <InputLabel id="ecommerce-listing-label">Ecommerce Listing Platforms</InputLabel>
+                <Select
+                  labelId="ecommerce-listing-label"
+                  multiple
+                  name="ecommerceListingPlatforms"
+                  value={ecommerceListingPlatforms}
+                  onChange={handleEcommerceListingChange}
+                  input={<OutlinedInput label="Ecommerce Listing Platforms" />}
+                  renderValue={(selected) => selected.join(', ')}
+                  MenuProps={menuProps}
+                >
+                  {ecommercePlatforms.map((platform) => (
+                    <MenuItem key={platform} value={platform} style={{ color: 'white' }}>
+                      <Checkbox checked={ecommerceListingPlatforms.indexOf(platform) > -1} />
+                      <ListItemText primary={platform} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+
+          {selectedServices.includes('Quick Commerce') && (
+            <Grid item xs={12}>
+              <FormControl fullWidth variant="outlined" sx={selectSx}>
+                <InputLabel id="quick-commerce-label">Quick Commerce Platforms</InputLabel>
+                <Select
+                  labelId="quick-commerce-label"
+                  multiple
+                  name="quickCommercePlatforms"
+                  value={quickCommercePlatforms}
+                  onChange={handleQuickCommerceChange}
+                  input={<OutlinedInput label="Quick Commerce Platforms" />}
+                  renderValue={(selected) => selected.join(', ')}
+                  MenuProps={menuProps}
+                >
+                  {quickCommercePlatformOptions.map((platform) => (
+                    <MenuItem key={platform} value={platform} style={{ color: 'white' }}>
+                      <Checkbox checked={quickCommercePlatforms.indexOf(platform) > -1} />
+                      <ListItemText primary={platform} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
         </>
       )}
 
-<Grid item xs={12}>
+      <Grid item xs={12}>
         <input
           accept="image/*,application/pdf"
           style={{ display: 'none' }}

@@ -86,7 +86,7 @@ const DeadlineForm = ({ leadData, handleChange, selectedServices }) => {
       {packageDuration ? (
         <Grid item xs={12}>
           <Typography variant="body1" sx={{ color: 'white', mb: 2 }}>
-            Package Duration: {packageDuration} days
+            Package Duration: {packageDuration} days  [after Onboarding]
           </Typography>
           <Typography variant="body2" sx={{ color: 'white', mb: 2 }}>
             Up to {leadData.packageType === 'Silver' ? '3' : leadData.packageType === 'Gold' ? '4' : '5'} Variations in Each
