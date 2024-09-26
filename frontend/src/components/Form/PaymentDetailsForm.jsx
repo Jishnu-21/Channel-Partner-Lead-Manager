@@ -57,7 +57,7 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
         { name: 'gstBill', label: 'GST Bill', type: 'select', options: ['Yes', 'No'] },
         { name: 'amountWithoutGST', label: 'Amount Without GST', type: 'number' },
         { name: 'paymentDate', label: 'Payment Date', type: 'date' },
-        { name: 'paymentDone', label: 'Payment Done', type: 'select', options: ['Full In Advance', 'Partial Payment'] },
+        { name: 'paymentDone', label: 'Payment Done', type: 'select', options: ['Full In Advance', 'Partial Payment','Not Done'] },
         { name: 'actualAmountReceived', label: 'Actual Amount Received', type: 'number' },
         { name: 'pendingAmount', label: 'Pending Amount', type: 'number' },
         { name: 'pendingAmountDueDate', label: 'Pending Amount Due Date', type: 'date' },
@@ -117,7 +117,7 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
         </Grid>
       ))}
 
-      <Grid item xs={12}>
+<Grid item xs={12}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
           <input
             accept="image/*,application/pdf"
@@ -132,14 +132,14 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
               component="span" 
               fullWidth
               sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: leadData.paymentProof ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
                 color: 'white',
                 '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  backgroundColor: leadData.paymentProof ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
                 },
               }}
             >
-              Upload Payment Proof
+              {leadData.paymentProof ? 'Payment Proof Added' : 'Upload Payment Proof'}
             </Button>
           </label>
           {leadData.paymentProof && (

@@ -282,13 +282,13 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
         </>
       )}
 
-      <Grid item xs={12}>
+<Grid item xs={12}>
         <input
           accept="image/*,application/pdf"
           style={{ display: 'none' }}
           id="quotation-file"
           type="file"
-          onChange={handleFileChange}
+          onChange={(e) => handleFileChange(e, 'quotationFile')}
           name="quotationFile"
         />
         <label htmlFor="quotation-file">
@@ -297,14 +297,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
             component="span" 
             fullWidth
             sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: leadData.quotationFile ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
               color: 'white',
               '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                backgroundColor: leadData.quotationFile ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
               },
             }}
           >
-            Upload Quotation (PDF or Image)
+            {leadData.quotationFile ? 'Quotation File Added' : 'Upload Quotation (PDF or Image)'}
           </Button>
         </label>
         {leadData.quotationFile && (
