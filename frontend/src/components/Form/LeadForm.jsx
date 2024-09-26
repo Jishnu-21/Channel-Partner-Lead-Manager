@@ -6,7 +6,9 @@ import {
   Typography, 
   Stepper,
   Step,
-  StepLabel
+  StepLabel,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
@@ -18,7 +20,6 @@ import DeadlineForm from './DeadlineForm.jsx';
 import PaymentDetailsForm from './PaymentDetailsForm.jsx';
 import FinalDetailsForm from './FinalDetailsForm.jsx';
 
-// Custom styled components for white labels with improved visibility
 const WhiteStepLabel = styled(StepLabel)(({ theme }) => ({
   '& .MuiStepLabel-label': {
     color: 'white',
@@ -65,7 +66,7 @@ const LeadForm = () => {
     clientDesignation: '',
     alternateContactNo: '',
     companyOffering: '',
-    servicesRequested: [], // Ensure this is included
+    servicesRequested: [],
     socialMediaManagementRequirement: [],
     websiteDevelopmentRequirement: '',
     brandingRequirement: [],
@@ -86,6 +87,9 @@ const LeadForm = () => {
     extraServiceRequested: '',
     importantInformation: '',
   });
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -123,7 +127,6 @@ const LeadForm = () => {
         } else if (Array.isArray(leadData[key])) {
           leadData[key].forEach(value => formData.append(`${key}[]`, value));
         } else if (key === 'tentativeDeadlineByCustomer' || key === 'tentativeDateGivenByBDAToCustomer' || key === 'paymentDate' || key === 'pendingAmountDueDate') {
-          // Convert date strings to ISO format
           formData.append(key, new Date(leadData[key]).toISOString());
         } else {
           formData.append(key, leadData[key]);
@@ -135,7 +138,6 @@ const LeadForm = () => {
       });
       toast.success('Lead submitted successfully!');
       console.log('Lead created:', response.data);
-      // Reset form fields and go back to first step
       setLeadData({
         contactNumber: '',
         email: '',
@@ -183,11 +185,12 @@ const LeadForm = () => {
           <ServiceDetailsForm 
             leadData={leadData} 
             handleChange={handleChange} 
-            setLeadData={setLeadData} // Pass setLeadData to update servicesRequested
+            setLeadData={setLeadData}
+            handleFileChange={handleFileChange}
           />
         );
       case 2:
-        return <PaymentDetailsForm leadData={leadData} handleChange={handleChange} />;
+        return <PaymentDetailsForm leadData={leadData} handleChange={handleChange} handleFileChange={handleFileChange} />;
       case 3:
         return <DeadlineForm leadData={leadData} handleChange={handleChange} selectedServices={leadData.servicesRequested} />;
       case 4:
@@ -196,6 +199,8 @@ const LeadForm = () => {
         return 'Unknown step';
     }
   };
+
+  const steps = ['Basic Information', 'Service Details', 'Payment Details', 'Deadline information', 'Final Details'];
 
   return (
     <Box
@@ -222,23 +227,19 @@ const LeadForm = () => {
         >
           Order Punching Form
         </Typography>
-        <WhiteStepper activeStep={activeStep} sx={{ mb: 4 }}>
-          <Step>
-            <WhiteStepLabel>Basic Information</WhiteStepLabel>
-          </Step>
-          <Step>
-            <WhiteStepLabel>Service Details</WhiteStepLabel>
-          </Step>
-          <Step>
-            <WhiteStepLabel>Payment Details</WhiteStepLabel>
-          </Step>
-          <Step>
-            <WhiteStepLabel>Deadline information</WhiteStepLabel>
-          </Step>
-          <Step>
-            <WhiteStepLabel>Final Details</WhiteStepLabel>
-          </Step>
-        </WhiteStepper>
+        {isMobile ? (
+          <Typography variant="body2" sx={{ color: 'white', mb: 2 }}>
+            Step {activeStep + 1} of {steps.length}: {steps[activeStep]}
+          </Typography>
+        ) : (
+          <WhiteStepper activeStep={activeStep} sx={{ mb: 4 }}>
+            {steps.map((label, index) => (
+              <Step key={label}>
+                <WhiteStepLabel>{label}</WhiteStepLabel>
+              </Step>
+            ))}
+          </WhiteStepper>
+        )}
         <form onSubmit={handleSubmit} style={{ color: 'white' }}>
           {renderStepContent(activeStep)}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
@@ -252,7 +253,7 @@ const LeadForm = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={activeStep === 4 ? handleSubmit : handleNext}
+              onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
               sx={{ 
                 py: 1.5, 
                 fontSize: { xs: '0.8rem', sm: '0.9rem' },
@@ -260,7 +261,7 @@ const LeadForm = () => {
                 color: 'black' 
               }}
             >
-              {activeStep === 4 ? 'Submit' : 'Next'}
+              {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
             </Button>
           </Box>
         </form>

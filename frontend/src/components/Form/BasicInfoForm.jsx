@@ -5,12 +5,16 @@ import {
   InputLabel, 
   Select, 
   MenuItem,
-  OutlinedInput
+  OutlinedInput,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import CustomTextField from './CustomTextField';
 
 const BasicInfoForm = ({ leadData, handleChange }) => {
   const bdaNames = ['Deepak Wagh', 'Ashutosh Singh', 'Deboshree Nayak', 'Founder'];
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const selectSx = {
     mb: 2,

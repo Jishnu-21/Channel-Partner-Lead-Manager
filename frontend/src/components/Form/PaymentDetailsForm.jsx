@@ -9,12 +9,16 @@ import {
   Button,
   TextField,
   Typography,
-  Box
+  Box,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import CustomTextField from './CustomTextField';
 
 const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
   const paymentModes = ['Cash', 'CreditCard', 'Debit Card', 'UPI', 'NEFT', 'RTGS', 'IMPS'];
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const selectSx = {
     mb: 2,
@@ -113,7 +117,6 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
         </Grid>
       ))}
 
-      {/* Payment Proof Upload for both Full and Partial Payments */}
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
           <input
@@ -129,10 +132,10 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
               component="span" 
               fullWidth
               sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)', // Match the style
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 color: 'white',
                 '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)', // Match hover effect
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
                 },
               }}
             >
