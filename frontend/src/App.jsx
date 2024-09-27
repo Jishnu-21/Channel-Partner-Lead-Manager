@@ -7,6 +7,8 @@ import BackendPanel from './pages/BackendPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import NotFound from './pages/NotFound';
+import SalesProfilePage from './pages/SalesProfile';
+import OperationalProfilePage from './pages/OperationalPage';
 
 
 const App = () => {
@@ -16,12 +18,13 @@ const App = () => {
       <Toaster/>
       <Routes>   
       <Route path="/" element={<Homepage/>} />
+      <Route path="/login" element={<LoginPage/>} />
+      <Route path="/sales/profile" element={<SalesProfilePage/>} />
+      <Route path="/operational/profile" element={<OperationalProfilePage/>} />
       <Route 
             path="/internal-user" 
             element={
-              <ProtectedRoute requiredType="internalUser">
                 <BackendPanel />
-              </ProtectedRoute>
             } 
           />
       <Route path="*" element={<NotFound/>} /> {/* Catch-all route */}

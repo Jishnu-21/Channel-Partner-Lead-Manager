@@ -1,7 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  userType: localStorage.getItem('userType') || null, 
+  user: JSON.parse(localStorage.getItem('user')) || null,
+  accessToken: localStorage.getItem('accessToken') || null,
+  refreshToken: localStorage.getItem('refreshToken') || null,
 };
 
 const userSlice = createSlice({
@@ -9,20 +11,41 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action) => {
-      state.userType = action.payload.userType;
-      state.token = action.payload.token;
-      localStorage.setItem('userType', action.payload.userType); // Store userType in localStorage
-      localStorage.setItem('token', action.payload.token);
+      state.user = action.payload.user;
+      state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
+      
+      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      localStorage.setItem('accessToken', action.payload.accessToken);
+      localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
     logout: (state) => {
-      state.userType = null;
-      state.token = null;
-      localStorage.removeItem('userType'); // Clear userType
-      localStorage.removeItem('token'); // Clear token
+      state.user = null;
+      state.accessToken = null;
+      state.refreshToken = null;
+      
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+    },
+    updateUser: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+      localStorage.setItem('user', JSON.stringify(state.user));
+    },
+    updateTokens: (state, action) => {
+      state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
+      
+      localStorage.setItem('accessToken', action.payload.accessToken);
+      localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
   },
 });
 
-export const { login, logout } = userSlice.actions;
+export const { login, logout, updateUser, updateTokens } = userSlice.actions;
+
+export const selectUser = (state) => state.user.user;
+export const selectAccessToken = (state) => state.user.accessToken;
+export const selectRefreshToken = (state) => state.user.refreshToken;
 
 export default userSlice.reducer;

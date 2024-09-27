@@ -12,7 +12,6 @@ const leadSchema = new mongoose.Schema({
   },
   bdaName: {
     type: String,
-    enum: ['Deepak Wagh', 'Ashutosh Singh', 'Deboshree Nayak', 'Founder'],
     required: true,
   },
   companyName: {
@@ -42,11 +41,11 @@ const leadSchema = new mongoose.Schema({
   // Service Details
   packages: {
     type: String,
-    enum: ['Shuruvat', 'Unnati'],
+    enum: ['Shuruvat', 'Unnati',' '],
   },
   packageType: {
     type: String,
-    enum: ['Silver', 'Gold', 'Platinum'],
+    enum: ['Silver', 'Gold', 'Platinum',' '],
   },
   servicesRequested: {
     type: [String],
@@ -58,7 +57,7 @@ const leadSchema = new mongoose.Schema({
   },
   websiteDevelopmentRequirement: {
     type: String,
-    enum: ['React', 'Wordpress', 'Other'],
+    enum: ['React', 'Wordpress', 'Other', ''],
   },
   brandingRequirement: {
     type: [String],
@@ -76,15 +75,12 @@ const leadSchema = new mongoose.Schema({
   gstBill: {
     type: String,
     enum: ['Yes', 'No'],
-    required: true,
   },
   amountWithoutGST: {
     type: Number,
-    required: true,
   },
   paymentDate: {
     type: Date,
-    required: true,
   },
   paymentDone: {
     type: String,
@@ -93,19 +89,16 @@ const leadSchema = new mongoose.Schema({
   },
   actualAmountReceived: {
     type: Number,
-    required: true,
   },
   pendingAmount: {
     type: Number,
-    required: true,
   },
   pendingAmountDueDate: {
     type: Date,
   },
   paymentMode: {
     type: String,
-    enum: ['Cash', 'CreditCard', 'Debit Card', 'UPI', 'NEFT', 'RTGS', 'IMPS'],
-    required: true,
+    enum: ['Cash', 'CreditCard', 'Debit Card', 'UPI', 'NEFT', 'RTGS', 'IMPS',''],
   },
   paymentProof: {
     type: String, // This will store the URL or path to the uploaded file
@@ -113,9 +106,6 @@ const leadSchema = new mongoose.Schema({
 
   // Deadline Information
   tentativeDeadlineByCustomer: {
-    type: Date,
-  },
-  tentativeDateGivenByBDAToCustomer: {
     type: Date,
   },
   websiteDevelopmentTime: {

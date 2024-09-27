@@ -5,7 +5,6 @@ const router = express.Router();
 
 // Route to authenticate user
 router.post('/login',login );
-router.get('/channel-partners',getChannelPartners );
 
 
 // Add more routes for filtering, updating, and deleting leads as needed

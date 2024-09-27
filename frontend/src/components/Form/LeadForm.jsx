@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { logout } from '../../features/userSlice';
+import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
   Button, 
@@ -8,8 +10,12 @@ import {
   Step,
   StepLabel,
   useMediaQuery,
-  useTheme
+  useTheme,
+  IconButton,
+  Menu,
+  MenuItem
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { toast } from 'sonner'; 
@@ -20,6 +26,7 @@ import DeadlineForm from './DeadlineForm.jsx';
 import PaymentDetailsForm from './PaymentDetailsForm.jsx';
 import FinalDetailsForm from './FinalDetailsForm.jsx';
 import ReviewForm from './ReviewForm.jsx';
+import { useSelector, useDispatch } from 'react-redux';
 
 const WhiteStepLabel = styled(StepLabel)(({ theme }) => ({
   '& .MuiStepLabel-label': {
@@ -56,12 +63,16 @@ const WhiteStepper = styled(Stepper)(({ theme }) => ({
 }));
 
 const LeadForm = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [errors, setErrors] = useState({});
+  const user = useSelector((state) => state.user);
+  const [anchorEl, setAnchorEl] = useState(null);
   const [leadData, setLeadData] = useState({
     contactNumber: '',
-    email: '',
-    bdaName: '',
+    email: user.email || '', // Prefill with user's email
+    bdaName: user.username || '', // Prefill with user's username (assuming it's the BDA name)
     companyName: '',
     clientName: '',
     clientEmail: '',
@@ -88,6 +99,11 @@ const LeadForm = () => {
     servicePromisedByBDA: '',
     extraServiceRequested: '',
     importantInformation: '',
+    packages: '',
+    packageType: '',
+    websiteDevelopmentTime: '',
+    brandingTime: '',
+    socialMediaTime: '',
   });
 
   const theme = useTheme();
@@ -137,23 +153,22 @@ const LeadForm = () => {
         if (!leadData.totalServiceFeesCharged) newErrors.totalServiceFeesCharged = 'Total Service Fees is required';
         if (!leadData.paymentDone) newErrors.paymentDone = 'Payment Status is required';
         break;
-        case 3:
-          if (!leadData.tentativeDeadlineByCustomer) {
-            newErrors.tentativeDeadlineByCustomer = 'Start Date By Customer is required';
+      case 3:
+        if (!leadData.tentativeDeadlineByCustomer) {
+          newErrors.tentativeDeadlineByCustomer = 'Start Date By Customer is required';
+        }
+        if (!leadData.packages) {
+          if (leadData.servicesRequested.includes('Website Development') && !leadData.websiteDevelopmentTime) {
+            newErrors.websiteDevelopmentTime = 'Website Development Time Period is required';
           }
-          if (!leadData.packages) {
-            // If no package is selected, check for individual service time periods
-            if (leadData.servicesRequested.includes('Website Development') && !leadData.websiteDevelopmentTime) {
-              newErrors.websiteDevelopmentTime = 'Website Development Time Period is required';
-            }
-            if (leadData.servicesRequested.includes('Branding') && !leadData.brandingTime) {
-              newErrors.brandingTime = 'Branding Time Period is required';
-            }
-            if (leadData.servicesRequested.includes('Social Media Management') && !leadData.socialMediaTime) {
-              newErrors.socialMediaTime = 'Social Media Marketing Time Period is required';
-            }
+          if (leadData.servicesRequested.includes('Branding') && !leadData.brandingTime) {
+            newErrors.brandingTime = 'Branding Time Period is required';
           }
-          break;
+          if (leadData.servicesRequested.includes('Social Media Management') && !leadData.socialMediaTime) {
+            newErrors.socialMediaTime = 'Social Media Marketing Time Period is required';
+          }
+        }
+        break;
       default:
         break;
     }
@@ -189,14 +204,19 @@ const LeadForm = () => {
   const handleFinalSubmit = async () => {
     try {
       const formData = new FormData();
+      
       for (const key in leadData) {
         if (leadData[key] instanceof File) {
           formData.append(key, leadData[key], leadData[key].name);
         } else if (Array.isArray(leadData[key])) {
           formData.append(key, JSON.stringify(leadData[key]));
-        } else {
+        } else if (leadData[key] !== null && leadData[key] !== undefined) {
           formData.append(key, leadData[key]);
         }
+      }
+
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
 
       const response = await axios.post(`${API_URL}/leads`, formData, {
@@ -206,21 +226,85 @@ const LeadForm = () => {
       });
 
       if (response.status === 201) {
-        toast.success('Lead created successfully!');
-        // Reset form or redirect
+        toast.success('Lead submitted successfully!');
+        setLeadData({
+          contactNumber: '',
+          email: '',
+          bdaName: '',
+          companyName: '',
+          clientName: '',
+          clientEmail: '',
+          clientDesignation: '',
+          alternateContactNo: '',
+          companyOffering: '',
+          servicesRequested: [],
+          socialMediaManagementRequirement: [],
+          websiteDevelopmentRequirement: '',
+          brandingRequirement: [],
+          quotationFile: null,
+          tentativeDeadlineByCustomer: '',
+          tentativeDateGivenByBDAToCustomer: '',
+          totalServiceFeesCharged: '',
+          gstBill: '',
+          amountWithoutGST: '',
+          paymentDate: '',
+          paymentDone: '',
+          proofOfApprovalForPartialPayment: null,
+          actualAmountReceived: '',
+          pendingAmount: '',
+          pendingAmountDueDate: '',
+          paymentMode: '',
+          servicePromisedByBDA: '',
+          extraServiceRequested: '',
+          importantInformation: '',
+          packages: '',
+          packageType: '',
+          websiteDevelopmentTime: '',
+          brandingTime: '',
+          socialMediaTime: '',
+        });
+        setActiveStep(0);
       } else {
-        toast.error('Failed to create lead. Please try again.');
+        toast.error('Failed to submit lead. Please try again.');
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'An error occurred while submitting the lead.');
-      console.error('Error creating lead:', error);
+      if (error.response) {
+        toast.error(`Error: ${error.response.data.message || 'An error occurred while submitting the lead.'}`);
+        console.error('Error response:', error.response.data);
+      } else if (error.request) {
+        toast.error('Network error. Please check your internet connection and try again.');
+        console.error('Error request:', error.request);
+      } else {
+        toast.error('An error occurred while submitting the lead.');
+        console.error('Error message:', error.message);
+      }
     }
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+    toast.success('Logged out successfully');
+    handleMenuClose();
+  };
+
+  const handleProfile = () => {
+    navigate('/sales/profile')
+    handleMenuClose();
   };
 
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
-        return <BasicInfoForm leadData={leadData} handleChange={handleChange} errors={errors} />;
+        return <BasicInfoForm leadData={leadData} handleChange={handleChange} errors={errors}   disabledFields={['bdaName', 'email']}  />;
       case 1:
         return (
           <ServiceDetailsForm 
@@ -249,29 +333,64 @@ const LeadForm = () => {
 
   return (
     <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      p={2}
       sx={{ 
         minHeight: '100vh', 
         bgcolor: 'transparent',
-        paddingX: { xs: 1, sm: 2 },
+        position: 'relative',
+        paddingTop: '70px', // Increased top padding to account for the fixed header
       }}
     >
-      <Container maxWidth="md">
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '60px',
+          bgcolor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          px: 2,
+          zIndex: 1000,
+        }}
+      >
         <Typography 
-          variant="h5" 
+          variant="h6" 
           component="h1" 
-          align="center" 
-          gutterBottom 
           sx={{ 
             color: 'white', 
-            fontSize: { xs: '1.2rem', sm: '1.5rem' }
+            fontSize: { xs: '1rem', sm: '1.25rem' },
+            flexGrow: 1,
+            textAlign: 'center',
           }}
         >
           Order Punching Form
         </Typography>
+        <IconButton
+          onClick={handleMenuOpen}
+          sx={{ 
+            color: 'white',
+            position: 'absolute',
+            right: 16,
+            '&:hover': {
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
+            },
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={handleProfile}>Profile</MenuItem>
+          <MenuItem onClick={handleLogout}>Logout</MenuItem>
+        </Menu>
+      </Box>
+      
+      <Container maxWidth="md" sx={{ pt: 3, pb: 4 }}>
         {isMobile ? (
           <Typography variant="body2" sx={{ color: 'white', mb: 2 }}>
             Step {activeStep + 1} of {steps.length}: {steps[activeStep]}
@@ -287,7 +406,7 @@ const LeadForm = () => {
         )}
         <form onSubmit={handleSubmit} style={{ color: 'white' }}>
           {renderStepContent(activeStep)}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
             <Button
               disabled={activeStep === 0}
               onClick={handleBack}
@@ -302,6 +421,7 @@ const LeadForm = () => {
                 onClick={handleFinalSubmit}
                 sx={{ 
                   py: 1.5, 
+                  px: 4,
                   fontSize: { xs: '0.8rem', sm: '0.9rem' },
                   backgroundColor: 'white', 
                   color: 'black' 
@@ -316,6 +436,7 @@ const LeadForm = () => {
                 onClick={activeStep === steps.length - 2 ? handleSubmit : handleNext}
                 sx={{ 
                   py: 1.5, 
+                  px: 4,
                   fontSize: { xs: '0.8rem', sm: '0.9rem' },
                   backgroundColor: 'white', 
                   color: 'black' 

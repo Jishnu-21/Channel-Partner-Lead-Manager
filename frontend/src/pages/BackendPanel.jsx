@@ -4,6 +4,7 @@ import Sidebar from '../components/InternalUser/Sidebar';
 import Dashboard from '../components/InternalUser/Dashboard';
 import DataManagement from '../components/InternalUser/DataManagement';
 import { API_URL } from '../config';
+import { toast } from 'sonner';
 
 const BackendPanel = () => {
   const [activeView, setActiveView] = useState('dashboard');
@@ -18,24 +19,35 @@ const BackendPanel = () => {
   const [selectedPartners, setSelectedPartners] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [channelPartners, setChannelPartners] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLeads = async () => {
-      const response = await fetch(`${API_URL}/leads`);
-      const data = await response.json();
-      setLeads(data);
-      setFilteredLeads(data);
-    };
-    fetchLeads();
-  }, []);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [leadsResponse, partnersResponse] = await Promise.all([
+          fetch(`${API_URL}/leads`),
+          fetch(`${API_URL}/users/channel-partners`)
+        ]);
+        
+        if (!leadsResponse.ok) throw new Error('Failed to fetch leads');
+        if (!partnersResponse.ok) throw new Error('Failed to fetch channel partners');
 
-  useEffect(() => {
-    const fetchChannelPartners = async () => {
-      const response = await fetch(`${API_URL}/users/channel-partners`);
-      const data = await response.json();
-      setChannelPartners(data);
+        const leadsData = await leadsResponse.json();
+        const partnersData = await partnersResponse.json();
+
+        setLeads(leadsData);
+        setFilteredLeads(leadsData);
+        setChannelPartners(partnersData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load data. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     };
-    fetchChannelPartners();
+
+    fetchData();
   }, []);
 
   const handleFilterChange = (e) => {
@@ -47,6 +59,11 @@ const BackendPanel = () => {
   };
 
   const applyFilters = () => {
+    if (!Array.isArray(leads)) {
+      console.error('Leads is not an array:', leads);
+      return;
+    }
+
     const filtered = leads.filter(lead => {
       const date = new Date(lead.date);
       const currentDate = new Date();
@@ -81,15 +98,8 @@ const BackendPanel = () => {
 
   const handlePartnerChange = (event) => {
     const value = event.target.value;
-  
-    if (value === "") {
-      setSelectedPartners([]); // Reset to default state when "All Partners" is selected
-      // You can also reset any other states here as needed
-    } else {
-      setSelectedPartners(value);
-    }
+    setSelectedPartners(value === "" ? [] : value);
   };
-  
 
   const selectedLeads = selectedPartners.length > 0
     ? filteredLeads.filter(lead => selectedPartners.includes(lead.channelPartnerCode))
@@ -98,8 +108,14 @@ const BackendPanel = () => {
   const uniquePartners = channelPartners.map(partner => partner.channelPartnerCode);
 
   useEffect(() => {
-    applyFilters();
+    if (leads.length > 0) {
+      applyFilters();
+    }
   }, [filter, leads]);
+
+  if (isLoading) {
+    return <Box>Loading...</Box>;
+  }
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -120,7 +136,7 @@ const BackendPanel = () => {
               filter={filter}
               handleFilterChange={handleFilterChange}
               applyFilters={applyFilters}
-              filteredLeads={filteredLeads} // Pass filteredLeads here
+              filteredLeads={filteredLeads}
             />
           : <DataManagement 
               filter={filter} 

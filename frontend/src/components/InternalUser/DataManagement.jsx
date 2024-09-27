@@ -16,7 +16,11 @@ import {
   TablePagination,
   useTheme,
   useMediaQuery,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const DataManagement = ({ filter, handleFilterChange, applyFilters, filteredLeads, resetFilter }) => {
   const theme = useTheme();
@@ -29,10 +33,139 @@ const DataManagement = ({ filter, handleFilterChange, applyFilters, filteredLead
     setPage(newPage);
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // getMonth() is zero-indexed
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
+  const renderBasicInfo = (lead) => (
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">BDA Name: {lead.bdaName}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Company Name: {lead.companyName}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Client Name: {lead.clientName}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Client Email: {lead.clientEmail}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Client Designation: {lead.clientDesignation}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Contact Number: {lead.contactNumber}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Alternate Contact: {lead.alternateContactNo}</Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Typography variant="body2">Company's Business: {lead.companyOffering}</Typography>
+      </Grid>
+    </Grid>
+  );
+
+  const renderServiceDetails = (lead) => (
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Typography variant="body2">Package: {lead.packages}</Typography>
+      </Grid>
+      {lead.packages && (
+        <Grid item xs={12}>
+          <Typography variant="body2">Package Type: {lead.packageType}</Typography>
+        </Grid>
+      )}
+      {!lead.packages && (
+        <>
+          <Grid item xs={12}>
+            <Typography variant="body2">Services Requested: {lead.servicesRequested.join(', ')}</Typography>
+          </Grid>
+          {lead.servicesRequested.includes('Social Media Management') && (
+            <Grid item xs={12}>
+              <Typography variant="body2">Social Media Platforms: {lead.socialMediaManagementRequirement.join(', ')}</Typography>
+            </Grid>
+          )}
+          {lead.servicesRequested.includes('Website Development') && (
+            <Grid item xs={12}>
+              <Typography variant="body2">Website Development: {lead.websiteDevelopmentRequirement}</Typography>
+            </Grid>
+          )}
+          {lead.servicesRequested.includes('Branding') && (
+            <Grid item xs={12}>
+              <Typography variant="body2">Branding Requirements: {lead.brandingRequirement.join(', ')}</Typography>
+            </Grid>
+          )}
+        </>
+      )}
+      <Grid item xs={12}>
+        <Typography variant="body2">Quotation File: {lead.quotationFile ? 'Uploaded' : 'Not uploaded'}</Typography>
+      </Grid>
+    </Grid>
+  );
+
+  const renderPaymentDetails = (lead) => (
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Total Service Fees: {lead.totalServiceFeesCharged}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">GST Bill: {lead.gstBill}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Amount Without GST: {lead.amountWithoutGST}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body2">Payment Status: {lead.paymentDone}</Typography>
+      </Grid>
+      {lead.paymentDone !== 'Not Done' && (
+        <>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2">Payment Date: {lead.paymentDate}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2">Amount Received: {lead.actualAmountReceived}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2">Payment Mode: {lead.paymentMode}</Typography>
+          </Grid>
+          {lead.paymentDone === 'Partial Payment' && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2">Pending Amount: {lead.pendingAmount}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2">Pending Amount Due Date: {lead.pendingAmountDueDate}</Typography>
+              </Grid>
+            </>
+          )}
+          <Grid item xs={12}>
+            <Typography variant="body2">Payment Proof: {lead.paymentProof ? 'Uploaded' : 'Not uploaded'}</Typography>
+          </Grid>
+        </>
+      )}
+    </Grid>
+  );
+
+  const renderFinalDetails = (lead) => (
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Typography variant="body2">Service Promised By BDA: {lead.servicePromisedByBDA}</Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Typography variant="body2">Important Information: {lead.importantInformation}</Typography>
+      </Grid>
+    </Grid>
+  );
 
   return (
     <Container maxWidth="lg" sx={{ p: 2 }}>
@@ -43,9 +176,9 @@ const DataManagement = ({ filter, handleFilterChange, applyFilters, filteredLead
         <Grid container spacing={2}>
           <Grid item xs={12} sm={4}>
             <TextField
-              name="channelPartnerCode"
-              label="Channel Partner Code"
-              value={filter.channelPartnerCode}
+              name="bdaName"
+              label="BDA Name"
+              value={filter.bdaName}
               onChange={handleFilterChange}
               fullWidth
               size={isMobile ? 'small' : 'medium'}
@@ -54,9 +187,9 @@ const DataManagement = ({ filter, handleFilterChange, applyFilters, filteredLead
           </Grid>
           <Grid item xs={12} sm={4}>
             <TextField
-              name="leadSource"
-              label="Lead Source"
-              value={filter.leadSource}
+              name="companyName"
+              label="Company Name"
+              value={filter.companyName}
               onChange={handleFilterChange}
               fullWidth
               size={isMobile ? 'small' : 'medium'}
@@ -65,9 +198,9 @@ const DataManagement = ({ filter, handleFilterChange, applyFilters, filteredLead
           </Grid>
           <Grid item xs={12} sm={4}>
             <TextField
-              name="leadInterest"
-              label="Lead Interest"
-              value={filter.leadInterest}
+              name="packages"
+              label="Package"
+              value={filter.packages}
               onChange={handleFilterChange}
               fullWidth
               size={isMobile ? 'small' : 'medium'}
@@ -85,40 +218,50 @@ const DataManagement = ({ filter, handleFilterChange, applyFilters, filteredLead
         </Box>
       </Box>
       {filteredLeads.length > 0 ? (
-        <TableContainer component={Paper} sx={{ maxHeight: '70vh', overflow: 'auto' }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>Channel Partner Code</TableCell>
-                <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>Lead Name</TableCell>
-                {!isMobile && (
-                  <>
-                    <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>Contact Number</TableCell>
-                    <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>Email</TableCell>
-                  </>
-                )}
-                <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>Lead Source</TableCell>
-                <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>Lead Interest</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredLeads.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((lead, index) => (
-                <TableRow key={index}>
-                  <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>{lead.channelPartnerCode}</TableCell>
-                  <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>{lead.leadName}</TableCell>
-                  {!isMobile && (
-                    <>
-                      <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>{lead.contactNumber}</TableCell>
-                      <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>{lead.email}</TableCell>
-                    </>
-                  )}
-                  <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>{lead.leadSource}</TableCell>
-                  <TableCell sx={{ padding: isMobile ? '4px' : '16px' }}>{lead.leadInterest}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        filteredLeads.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((lead, index) => (
+          <Accordion key={index} sx={{ mb: 2, backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
+                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                <span>{lead.companyName} - {lead.clientName} ({formatDate(lead.createdAt)})
+                </span>
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Basic Information</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {renderBasicInfo(lead)}
+                </AccordionDetails>
+              </Accordion>
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Service Details</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {renderServiceDetails(lead)}
+                </AccordionDetails>
+              </Accordion>
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Payment Details</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {renderPaymentDetails(lead)}
+                </AccordionDetails>
+              </Accordion>
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Final Details</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {renderFinalDetails(lead)}
+                </AccordionDetails>
+              </Accordion>
+            </AccordionDetails>
+          </Accordion>
+        ))
       ) : (
         <Typography variant="h6" sx={{ textAlign: 'center', mt: 4 }}>
           No results found. Please try different filter criteria.
