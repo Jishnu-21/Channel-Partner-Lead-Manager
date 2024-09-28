@@ -38,6 +38,11 @@ const leadSchema = new mongoose.Schema({
     required: true,
   },
 
+  companyIndustry: {
+    type: String,
+    required: true,
+  },
+
   // Service Details
   packages: {
     type: String,

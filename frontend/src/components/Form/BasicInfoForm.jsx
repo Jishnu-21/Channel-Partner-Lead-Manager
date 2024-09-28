@@ -116,6 +116,17 @@ const BasicInfoForm = ({ leadData, handleChange, errors, disabledFields = [] }) 
           helperText={errors.companyOffering}
         />
       </Grid>
+      <Grid item xs={12}>
+        <CustomTextField
+          label="Company's Industry"
+          name="companyIndustry"
+          value={leadData.companyIndustry}
+          onChange={handleChange}
+          required
+          error={!!errors.companyIndustry}
+          helperText={errors.companyIndustry}
+        />
+      </Grid>
     </Grid>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Toolbar } from '@mui/material';
 import Sidebar from '../components/InternalUser/Sidebar';
 import Dashboard from '../components/InternalUser/Dashboard';
+import PaymentDashboard from '../components/InternalUser/PaymentDashboard';
 import DataManagement from '../components/InternalUser/DataManagement';
 import { API_URL } from '../config';
 import { toast } from 'sonner';
@@ -27,7 +28,6 @@ const BackendPanel = () => {
       try {
         const [leadsResponse, partnersResponse] = await Promise.all([
           fetch(`${API_URL}/leads`),
-          fetch(`${API_URL}/users/channel-partners`)
         ]);
         
         if (!leadsResponse.ok) throw new Error('Failed to fetch leads');
@@ -58,7 +58,7 @@ const BackendPanel = () => {
     }));
   };
 
-  const applyFilters = () => {
+  const applyFilters = (customFilter = filter) => {
     if (!Array.isArray(leads)) {
       console.error('Leads is not an array:', leads);
       return;
@@ -68,17 +68,17 @@ const BackendPanel = () => {
       const date = new Date(lead.date);
       const currentDate = new Date();
       
-      const timeframeCondition = filter.timeframe ? 
-        (filter.timeframe === 'daily' ? date.toDateString() === currentDate.toDateString() :
-        filter.timeframe === 'weekly' ? 
+      const timeframeCondition = customFilter.timeframe ? 
+        (customFilter.timeframe === 'daily' ? date.toDateString() === currentDate.toDateString() :
+        customFilter.timeframe === 'weekly' ? 
           (currentDate.getTime() - date.getTime()) / (1000 * 3600 * 24) <= 7 :
-        filter.timeframe === 'monthly' ? date.getMonth() === currentDate.getMonth() && date.getFullYear() === currentDate.getFullYear() : true) 
+        customFilter.timeframe === 'monthly' ? date.getMonth() === currentDate.getMonth() && date.getFullYear() === currentDate.getFullYear() : true) 
       : true;
 
       return (
-        (filter.channelPartnerCode === '' || lead.channelPartnerCode === filter.channelPartnerCode) &&
-        (filter.leadSource === '' || lead.leadSource === filter.leadSource) &&
-        (filter.leadInterest === '' || lead.leadInterest === filter.leadInterest) &&
+        (customFilter.channelPartnerCode === '' || lead.channelPartnerCode === customFilter.channelPartnerCode) &&
+        (customFilter.leadSource === '' || lead.leadSource === customFilter.leadSource) &&
+        (customFilter.leadInterest === '' || lead.leadInterest === customFilter.leadInterest) &&
         timeframeCondition
       );
     });
@@ -127,25 +127,36 @@ const BackendPanel = () => {
       />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        {activeView === 'dashboard' 
-          ? <Dashboard 
-              selectedLeads={selectedLeads} 
-              uniquePartners={uniquePartners} 
-              selectedPartners={selectedPartners} 
-              handlePartnerChange={handlePartnerChange} 
-              filter={filter}
-              handleFilterChange={handleFilterChange}
-              applyFilters={applyFilters}
-              filteredLeads={filteredLeads}
-            />
-          : <DataManagement 
-              filter={filter} 
-              handleFilterChange={handleFilterChange} 
-              applyFilters={applyFilters} 
-              filteredLeads={filteredLeads} 
-              resetFilter={resetFilter} 
-            />
-        }
+        {activeView === 'dashboard' && (
+          <Dashboard 
+            selectedLeads={selectedLeads} 
+            uniquePartners={uniquePartners} 
+            selectedPartners={selectedPartners} 
+            handlePartnerChange={handlePartnerChange} 
+            filter={filter}
+            handleFilterChange={handleFilterChange}
+            applyFilters={applyFilters}
+            filteredLeads={filteredLeads}
+          />
+        )}
+        {activeView === 'paymentdashboard' && (
+          <PaymentDashboard 
+            selectedLeads={selectedLeads}
+            uniquePartners={uniquePartners}
+          />
+        )}
+        {activeView === 'datamanagement' && (
+          <DataManagement 
+            leads={leads}
+            filteredLeads={filteredLeads}
+            setFilteredLeads={setFilteredLeads}
+            filter={filter}
+            setFilter={setFilter}
+            handleFilterChange={handleFilterChange}
+            applyFilters={applyFilters}
+            resetFilter={resetFilter}
+          />
+        )}
       </Box>
     </Box>
   );

@@ -237,6 +237,7 @@ const LeadForm = () => {
           clientDesignation: '',
           alternateContactNo: '',
           companyOffering: '',
+          companyIndustry: '',
           servicesRequested: [],
           socialMediaManagementRequirement: [],
           websiteDevelopmentRequirement: '',

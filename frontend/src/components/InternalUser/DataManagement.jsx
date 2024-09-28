@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
   Box,
-  Grid,
   TextField,
   Button,
   Table,
@@ -14,31 +13,50 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  useTheme,
-  useMediaQuery,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import SearchIcon from '@mui/icons-material/Search';
+import LeadDetailsDialog from '../Sales/LeadDetailsDialog';
+import EditLeadDialog from '../Sales/EditLeadDialog';
+import axios from 'axios';
+import { API_URL } from '../../config';
+import { toast } from 'sonner';
 
-const DataManagement = ({ filter, handleFilterChange, applyFilters, filteredLeads, resetFilter }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
+const DataManagement = () => {
+  const [leads, setLeads] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [packageFilter, setPackageFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const fetchLeads = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/leads`);
+      setLeads(response.data);
+      setFilteredLeads(response.data);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+      toast.error('Failed to fetch leads');
+    }
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // getMonth() is zero-indexed
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
   };
 
   const handleChangeRowsPerPage = (event) => {
@@ -46,238 +64,174 @@ const DataManagement = ({ filter, handleFilterChange, applyFilters, filteredLead
     setPage(0);
   };
 
-  const renderBasicInfo = (lead) => (
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">BDA Name: {lead.bdaName}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Company Name: {lead.companyName}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Client Name: {lead.clientName}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Client Email: {lead.clientEmail}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Client Designation: {lead.clientDesignation}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Contact Number: {lead.contactNumber}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Alternate Contact: {lead.alternateContactNo}</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography variant="body2">Company's Business: {lead.companyOffering}</Typography>
-      </Grid>
-    </Grid>
-  );
+  const handleSearch = (event) => {
+    const term = event.target.value.toLowerCase();
+    setSearchTerm(term);
+    filterLeads(term, packageFilter, companyFilter);
+  };
 
-  const renderServiceDetails = (lead) => (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Typography variant="body2">Package: {lead.packages}</Typography>
-      </Grid>
-      {lead.packages && (
-        <Grid item xs={12}>
-          <Typography variant="body2">Package Type: {lead.packageType}</Typography>
-        </Grid>
-      )}
-      {!lead.packages && (
-        <>
-          <Grid item xs={12}>
-            <Typography variant="body2">Services Requested: {lead.servicesRequested.join(', ')}</Typography>
-          </Grid>
-          {lead.servicesRequested.includes('Social Media Management') && (
-            <Grid item xs={12}>
-              <Typography variant="body2">Social Media Platforms: {lead.socialMediaManagementRequirement.join(', ')}</Typography>
-            </Grid>
-          )}
-          {lead.servicesRequested.includes('Website Development') && (
-            <Grid item xs={12}>
-              <Typography variant="body2">Website Development: {lead.websiteDevelopmentRequirement}</Typography>
-            </Grid>
-          )}
-          {lead.servicesRequested.includes('Branding') && (
-            <Grid item xs={12}>
-              <Typography variant="body2">Branding Requirements: {lead.brandingRequirement.join(', ')}</Typography>
-            </Grid>
-          )}
-        </>
-      )}
-      <Grid item xs={12}>
-        <Typography variant="body2">Quotation File: {lead.quotationFile ? 'Uploaded' : 'Not uploaded'}</Typography>
-      </Grid>
-    </Grid>
-  );
+  const handlePackageFilter = (event) => {
+    const packageType = event.target.value;
+    setPackageFilter(packageType);
+    filterLeads(searchTerm, packageType, companyFilter);
+  };
 
-  const renderPaymentDetails = (lead) => (
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Total Service Fees: {lead.totalServiceFeesCharged}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">GST Bill: {lead.gstBill}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Amount Without GST: {lead.amountWithoutGST}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <Typography variant="body2">Payment Status: {lead.paymentDone}</Typography>
-      </Grid>
-      {lead.paymentDone !== 'Not Done' && (
-        <>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body2">Payment Date: {lead.paymentDate}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body2">Amount Received: {lead.actualAmountReceived}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body2">Payment Mode: {lead.paymentMode}</Typography>
-          </Grid>
-          {lead.paymentDone === 'Partial Payment' && (
-            <>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body2">Pending Amount: {lead.pendingAmount}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body2">Pending Amount Due Date: {lead.pendingAmountDueDate}</Typography>
-              </Grid>
-            </>
-          )}
-          <Grid item xs={12}>
-            <Typography variant="body2">Payment Proof: {lead.paymentProof ? 'Uploaded' : 'Not uploaded'}</Typography>
-          </Grid>
-        </>
-      )}
-    </Grid>
-  );
+  const handleCompanyFilter = (event) => {
+    const company = event.target.value;
+    setCompanyFilter(company);
+    filterLeads(searchTerm, packageFilter, company);
+  };
 
-  const renderFinalDetails = (lead) => (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Typography variant="body2">Service Promised By BDA: {lead.servicePromisedByBDA}</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography variant="body2">Important Information: {lead.importantInformation}</Typography>
-      </Grid>
-    </Grid>
-  );
+  const filterLeads = (term, packageType, company) => {
+    let filtered = leads.filter(lead => 
+      (lead.companyName.toLowerCase().includes(term) ||
+       lead.clientName.toLowerCase().includes(term) ||
+       lead.clientEmail.toLowerCase().includes(term)) &&
+      (packageType === '' || lead.packageType === packageType) &&
+      (company === '' || lead.companyName === company)
+    );
+    setFilteredLeads(filtered);
+  };
+
+  const handleDetailsClick = (lead) => {
+    setSelectedLead(lead);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const handleEditClick = (lead) => {
+    setSelectedLead(lead);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDetailsClose = () => {
+    setIsDetailsDialogOpen(false);
+    setSelectedLead(null);
+  };
+
+  const handleEditClose = () => {
+    setIsEditDialogOpen(false);
+    setSelectedLead(null);
+  };
+
+  const handleEditSave = async (updatedLead) => {
+    try {
+      await axios.put(`${API_URL}/leads/${updatedLead._id}`, updatedLead);
+      toast.success('Lead updated successfully');
+      fetchLeads();
+      handleEditClose();
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      toast.error('Failed to update lead');
+    }
+  };
+
+  const renderValue = (value) => value || "NA";
+
+  const uniquePackages = [...new Set(leads.map(lead => lead.packageType).filter(Boolean))];
+  const uniqueCompanies = [...new Set(leads.map(lead => lead.companyName))];
 
   return (
-    <Container maxWidth="lg" sx={{ p: 2 }}>
-      <Typography variant="h4" sx={{ mb: 2, textAlign: isMobile ? 'center' : 'left', fontSize: isMobile ? '1.5rem' : '2rem' }}>
-        Data Management
-      </Typography>
-      <Box sx={{ mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              name="bdaName"
-              label="BDA Name"
-              value={filter.bdaName}
-              onChange={handleFilterChange}
-              fullWidth
-              size={isMobile ? 'small' : 'medium'}
-              sx={{ mb: 2 }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              name="companyName"
-              label="Company Name"
-              value={filter.companyName}
-              onChange={handleFilterChange}
-              fullWidth
-              size={isMobile ? 'small' : 'medium'}
-              sx={{ mb: 2 }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              name="packages"
-              label="Package"
-              value={filter.packages}
-              onChange={handleFilterChange}
-              fullWidth
-              size={isMobile ? 'small' : 'medium'}
-              sx={{ mb: 2 }}
-            />
-          </Grid>
-        </Grid>
-        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} sx={{ mt: 2 }}>
-          <Button variant="contained" onClick={applyFilters} sx={{ mb: isMobile ? 1 : 0, mr: isMobile ? 0 : 1 }}>
-            Apply Filters
-          </Button>
-          <Button variant="outlined" onClick={resetFilter}>
-            Reset Filters
-          </Button>
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" sx={{ mb: 4 }}>Order Management</Typography>
+      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <TextField
+            fullWidth
+            label="Search leads"
+            variant="outlined"
+            value={searchTerm}
+            onChange={handleSearch}
+            InputProps={{
+              endAdornment: <SearchIcon color="action" />,
+            }}
+          />
+          <FormControl fullWidth>
+            <InputLabel>Package Type</InputLabel>
+            <Select
+              value={packageFilter}
+              onChange={handlePackageFilter}
+              label="Package Type"
+            >
+              <MenuItem value="">All</MenuItem>
+              {uniquePackages.map(pkg => (
+                <MenuItem key={pkg} value={pkg}>{pkg}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth>
+            <InputLabel>Company</InputLabel>
+            <Select
+              value={companyFilter}
+              onChange={handleCompanyFilter}
+              label="Company"
+            >
+              <MenuItem value="">All</MenuItem>
+              {uniqueCompanies.map(company => (
+                <MenuItem key={company} value={company}>{company}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
-      </Box>
-      {filteredLeads.length > 0 ? (
-        filteredLeads.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((lead, index) => (
-          <Accordion key={index} sx={{ mb: 2, backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                <span>{lead.companyName} - {lead.clientName} ({formatDate(lead.createdAt)})
-                </span>
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Basic Information</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {renderBasicInfo(lead)}
-                </AccordionDetails>
-              </Accordion>
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Service Details</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {renderServiceDetails(lead)}
-                </AccordionDetails>
-              </Accordion>
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Payment Details</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {renderPaymentDetails(lead)}
-                </AccordionDetails>
-              </Accordion>
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Final Details</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {renderFinalDetails(lead)}
-                </AccordionDetails>
-              </Accordion>
-            </AccordionDetails>
-          </Accordion>
-        ))
-      ) : (
-        <Typography variant="h6" sx={{ textAlign: 'center', mt: 4 }}>
-          No results found. Please try different filter criteria.
-        </Typography>
-      )}
-      {filteredLeads.length > 0 && (
+      </Paper>
+      <Paper elevation={3} sx={{ overflow: 'hidden' }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Date</TableCell>
+                <TableCell>Client Name</TableCell>
+                <TableCell>Company Name</TableCell>
+                <TableCell>Package/Services</TableCell>
+                <TableCell>Payment Done</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredLeads
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((lead) => (
+                  <TableRow key={lead._id} hover>
+                    <TableCell>{new Date(lead.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{renderValue(lead.clientName)}</TableCell>
+                    <TableCell>{renderValue(lead.companyName)}</TableCell>
+                    <TableCell>{renderValue(lead.packageType || lead.servicesRequested?.join(', '))}</TableCell>
+                    <TableCell>{renderValue(lead.paymentDone)}</TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleDetailsClick(lead)} color="primary">
+                        <VisibilityIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleEditClick(lead)} color="secondary">
+                        <EditIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
           component="div"
           count={filteredLeads.length}
-          rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25]}
         />
-      )}
+      </Paper>
+
+      <LeadDetailsDialog
+        open={isDetailsDialogOpen}
+        onClose={handleDetailsClose}
+        lead={selectedLead}
+      />
+
+      <EditLeadDialog
+        open={isEditDialogOpen}
+        onClose={handleEditClose}
+        lead={selectedLead}
+        onSave={handleEditSave}
+      />
     </Container>
   );
 };

@@ -9,7 +9,13 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import { LayoutDashboard, Table as TableIcon, Menu as MenuIcon, LogOut } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Table as TableIcon, 
+  Menu as MenuIcon, 
+  LogOut,
+  CreditCard 
+} from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../features/userSlice'; // Update with your actual path
 import { toast } from 'sonner'; 
@@ -64,10 +70,12 @@ const Sidebar = ({ drawerOpen, setDrawerOpen, setActiveView, resetFilter }) => {
       >
         <Toolbar />
         <List>
-          {['Dashboard', 'Data Management'].map((text, index) => (
+          {['Dashboard', 'Payment Dashboard', 'Data Management'].map((text, index) => (
             <ListItem button key={text} onClick={() => handleViewChange(text.toLowerCase().replace(' ', ''))}>
               <ListItemIcon>
-                {index % 2 === 0 ? <LayoutDashboard /> : <TableIcon />}
+                {index === 0 ? <LayoutDashboard /> : 
+                 index === 1 ? <CreditCard /> : 
+                 <TableIcon />}
               </ListItemIcon>
               <ListItemText primary={text} />
             </ListItem>

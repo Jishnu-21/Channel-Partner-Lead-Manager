@@ -218,6 +218,7 @@ const ReviewForm = ({ leadData, setLeadData, setActiveStep }) => {
         contactNumber: leadData.contactNumber,
         alternateContactNo: leadData.alternateContactNo,
         companyOffering: leadData.companyOffering,
+        companyIndustry: leadData.companyIndustry,
       }, 'basic')}
 
       {renderServiceOrPackageDetails()}
