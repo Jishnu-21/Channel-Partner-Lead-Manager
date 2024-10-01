@@ -1,1 +1,1 @@
-export const API_URL = 'https://joltstudio.com/api';
+export const API_URL = 'https://joltstudio.in/api';
