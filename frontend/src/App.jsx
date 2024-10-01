@@ -10,24 +10,54 @@ import NotFound from './pages/NotFound';
 import SalesProfilePage from './pages/SalesProfile';
 import OperationalProfilePage from './pages/OperationalPage';
 
-
 const App = () => {
-
   return (
     <Router>
       <Toaster/>
-      <Routes>   
-      <Route path="/" element={<Homepage/>} />
-      <Route path="/login" element={<LoginPage/>} />
-      <Route path="/sales/profile" element={<SalesProfilePage/>} />
-      <Route path="/operational/profile" element={<OperationalProfilePage/>} />
+      <Routes>
       <Route 
-            path="/internal-user" 
-            element={
-                <BackendPanel />
-            } 
-          />
-      <Route path="*" element={<NotFound/>} /> {/* Catch-all route */}
+    path="/login" 
+    element={
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    } 
+  />      <Route 
+          path="/" 
+          element={
+            <ProtectedRoute allowedRoles={['sales']}>
+              <Homepage/>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/sales/profile" 
+          element={
+            <ProtectedRoute allowedRoles={['sales']}>
+              <SalesProfilePage/>
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/operational/profile" 
+          element={
+            <ProtectedRoute allowedRoles={['operational']}>
+              <OperationalProfilePage/>
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/internal-user" 
+          element={
+            <ProtectedRoute allowedRoles={['management']}>
+              <BackendPanel />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route path="*" element={<NotFound/>} />
       </Routes>
     </Router>
   )

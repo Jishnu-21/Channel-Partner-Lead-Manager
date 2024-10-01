@@ -37,7 +37,7 @@ const LoginPage = () => {
           navigate('/operational/profile');
           break;
         case 'Management':
-          navigate('/management');
+          navigate('/internal-user');
           break;
         case 'Sales':
           navigate('/');
@@ -50,8 +50,13 @@ const LoginPage = () => {
       console.error('Login error:', error);
       setLoading(false);
       if (error.response) {
+        console.error('Error response:', error.response);
         toast.error(error.response.data.message || 'Login failed. Please check your email.');
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+        toast.error('No response received from server. Please check your connection.');
       } else {
+        console.error('Error message:', error.message);
         toast.error('Login failed. Please try again later.');
       }
     }

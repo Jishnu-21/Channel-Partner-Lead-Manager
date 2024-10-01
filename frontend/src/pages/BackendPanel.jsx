@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Toolbar } from '@mui/material';
+import { Box, AppBar, Toolbar, Badge, IconButton, Snackbar, Alert, Typography } from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import Pusher from 'pusher-js';
 import Sidebar from '../components/InternalUser/Sidebar';
 import Dashboard from '../components/InternalUser/Dashboard';
 import PaymentDashboard from '../components/InternalUser/PaymentDashboard';
 import DataManagement from '../components/InternalUser/DataManagement';
+import Notifications from '../components/InternalUser/Notifications.jsx';
 import { API_URL } from '../config';
 import { toast } from 'sonner';
 
@@ -21,24 +24,57 @@ const BackendPanel = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [channelPartners, setChannelPartners] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [paymentAlerts, setPaymentAlerts] = useState([]);
+  const [showAlert, setShowAlert] = useState(false);
+  const [currentAlert, setCurrentAlert] = useState(null);
+  const [partnerStats, setPartnerStats] = useState({
+    incentive: 0,
+    revenueWithGST: 0,
+    revenueWithoutGST: 0
+  });
+
+  useEffect(() => {
+    const pusher = new Pusher('818ffa62d3c676b1072b', {
+      cluster: 'ap2',
+    });
+
+    const channel = pusher.subscribe('payment-alerts');
+    channel.bind('payment-due-soon', data => {
+      setPaymentAlerts(prevAlerts => [...prevAlerts, data]);
+      setCurrentAlert(data);
+      setShowAlert(true);
+    });
+
+    return () => {
+      pusher.unsubscribe('payment-alerts');
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [leadsResponse, partnersResponse] = await Promise.all([
-          fetch(`${API_URL}/leads`),
+        const [leadsResponse, notificationsResponse] = await Promise.all([
+          fetch(`${API_URL}/leads`).catch(() => ({ ok: false })),
+          fetch(`${API_URL}/notifications`).catch(() => ({ ok: false }))
         ]);
         
         if (!leadsResponse.ok) throw new Error('Failed to fetch leads');
-        if (!partnersResponse.ok) throw new Error('Failed to fetch channel partners');
+        if (!notificationsResponse.ok) throw new Error('Failed to fetch notifications');
 
         const leadsData = await leadsResponse.json();
-        const partnersData = await partnersResponse.json();
+        const notificationsData = await notificationsResponse.json();
 
         setLeads(leadsData);
         setFilteredLeads(leadsData);
-        setChannelPartners(partnersData);
+        setNotifications(notificationsData);
+        setNotificationCount(notificationsData.filter(n => !n.read).length);
+
+        // Extract unique channel partner codes from leads
+        const uniquePartners = [...new Set(leadsData.map(lead => lead.channelPartnerCode))];
+        setChannelPartners(uniquePartners.map(code => ({ channelPartnerCode: code })));
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Failed to load data. Please try again.');
@@ -99,6 +135,26 @@ const BackendPanel = () => {
   const handlePartnerChange = (event) => {
     const value = event.target.value;
     setSelectedPartners(value === "" ? [] : value);
+
+    // Calculate stats for the selected partner
+    if (value !== "") {
+      const partnerLeads = leads.filter(lead => lead.channelPartnerCode === value);
+      const totalRevenue = partnerLeads.reduce((sum, lead) => sum + lead.totalServiceFeesCharged, 0);
+      const revenueWithoutGST = totalRevenue / 1.18; // Assuming 18% GST
+      const incentive = revenueWithoutGST * 0.1; // Assuming 10% incentive
+
+      setPartnerStats({
+        incentive: incentive.toFixed(2),
+        revenueWithGST: totalRevenue.toFixed(2),
+        revenueWithoutGST: revenueWithoutGST.toFixed(2)
+      });
+    } else {
+      setPartnerStats({
+        incentive: 0,
+        revenueWithGST: 0,
+        revenueWithoutGST: 0
+      });
+    }
   };
 
   const selectedLeads = selectedPartners.length > 0
@@ -113,6 +169,13 @@ const BackendPanel = () => {
     }
   }, [filter, leads]);
 
+  const handleCloseAlert = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setShowAlert(false);
+  };
+
   if (isLoading) {
     return <Box>Loading...</Box>;
   }
@@ -120,10 +183,11 @@ const BackendPanel = () => {
   return (
     <Box sx={{ display: 'flex' }}>
       <Sidebar 
-        drawerOpen={drawerOpen} 
-        setDrawerOpen={setDrawerOpen} 
+        drawerOpen={drawerOpen}
+        setDrawerOpen={setDrawerOpen}
         setActiveView={setActiveView} 
         resetFilter={resetFilter}
+        notificationCount={notificationCount + paymentAlerts.length}
       />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
@@ -137,6 +201,7 @@ const BackendPanel = () => {
             handleFilterChange={handleFilterChange}
             applyFilters={applyFilters}
             filteredLeads={filteredLeads}
+            partnerStats={partnerStats}
           />
         )}
         {activeView === 'paymentdashboard' && (
@@ -157,6 +222,18 @@ const BackendPanel = () => {
             resetFilter={resetFilter}
           />
         )}
+        {activeView === 'notifications' && (
+          <Notifications 
+            notifications={[...notifications, ...paymentAlerts]}
+            setNotifications={setNotifications}
+            setNotificationCount={setNotificationCount}
+          />
+        )}
+        <Snackbar open={showAlert} autoHideDuration={6000} onClose={handleCloseAlert}>
+          <Alert onClose={handleCloseAlert} severity="warning" sx={{ width: '100%' }}>
+            {currentAlert?.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </Box>
   );

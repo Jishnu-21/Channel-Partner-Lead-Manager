@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Grid, 
   FormControl, 
@@ -50,6 +50,23 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
     },
   };
 
+  useEffect(() => {
+    if (leadData.totalServiceFeesCharged) {
+      const totalAmount = parseFloat(leadData.totalServiceFeesCharged);
+      const amountWithoutGST = totalAmount / 1.18; // Reverse calculate amount without GST
+      handleChange({ target: { name: 'amountWithoutGST', value: amountWithoutGST.toFixed(2) } });
+    }
+  }, [leadData.totalServiceFeesCharged]);
+
+  useEffect(() => {
+    if (leadData.totalServiceFeesCharged && leadData.actualAmountReceived) {
+      const totalAmount = parseFloat(leadData.totalServiceFeesCharged);
+      const receivedAmount = parseFloat(leadData.actualAmountReceived);
+      const pendingAmount = totalAmount - receivedAmount;
+      handleChange({ target: { name: 'pendingAmount', value: pendingAmount.toFixed(2) } });
+    }
+  }, [leadData.totalServiceFeesCharged, leadData.actualAmountReceived]);
+
   const renderField = (field) => (
     <Grid item xs={12} sm={6} key={field.name}>
       {field.type === 'select' ? (
@@ -61,7 +78,7 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
             name={field.name}
             value={leadData[field.name] || ''}
             onChange={handleChange}
-            required
+            required={field.required}
             input={<OutlinedInput label={field.label} />}
             MenuProps={{
               PaperProps: {
@@ -88,7 +105,7 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
           InputLabelProps={{
             shrink: true,
           }}
-          required
+          required={field.required}
           fullWidth
           sx={dateFieldSx}
         />
@@ -99,28 +116,29 @@ const PaymentDetailsForm = ({ leadData, handleChange, handleFileChange }) => {
           type={field.type}
           value={leadData[field.name] || ''}
           onChange={handleChange}
-          required
+          required={field.required}
+          disabled={field.disabled}
         />
       )}
     </Grid>
   );
 
   const commonFields = [
-    { name: 'totalServiceFeesCharged', label: 'Total Service Fees Charged', type: 'number' },
-    { name: 'gstBill', label: 'GST Bill', type: 'select', options: ['Yes', 'No'] },
-    { name: 'amountWithoutGST', label: 'Amount Without GST', type: 'number' },
-    { name: 'paymentDone', label: 'Payment Done', type: 'select', options: ['Full In Advance', 'Partial Payment', 'Not Done'] },
+    { name: 'totalServiceFeesCharged', label: 'Total Service Fees Charged (Inc. GST)', type: 'number', required: true },
+    { name: 'amountWithoutGST', label: 'Amount Without GST', type: 'number', disabled: true },
+    { name: 'gstBill', label: 'GST Bill', type: 'select', options: ['Yes', 'No'], required: true },
+    { name: 'paymentDone', label: 'Payment Done', type: 'select', options: ['Full In Advance', 'Partial Payment', 'Not Done'], required: true },
   ];
 
   const paymentFields = [
-    { name: 'paymentDate', label: 'Payment Date', type: 'date' },
-    { name: 'actualAmountReceived', label: 'Actual Amount Received', type: 'number' },
-    { name: 'paymentMode', label: 'Payment Mode', type: 'select', options: paymentModes },
+    { name: 'paymentDate', label: 'Payment Date', type: 'date', required: true },
+    { name: 'actualAmountReceived', label: 'Actual Amount Received', type: 'number', required: true },
+    { name: 'pendingAmount', label: 'Pending Amount', type: 'number', disabled: true },
+    { name: 'paymentMode', label: 'Payment Mode', type: 'select', options: paymentModes, required: true },
   ];
 
   const partialPaymentFields = [
-    { name: 'pendingAmount', label: 'Pending Amount', type: 'number' },
-    { name: 'pendingAmountDueDate', label: 'Pending Amount Due Date', type: 'date' },
+    { name: 'pendingAmountDueDate', label: 'Pending Amount Due Date', type: 'date', required: true },
   ];
 
   return (

@@ -140,7 +140,7 @@ const ReviewForm = ({ leadData, setLeadData, setActiveStep }) => {
   );
 
   const renderServiceOrPackageDetails = () => {
-    if (leadData.packages) {
+    if (leadData.packages && leadData.packages !== 'NA') {
       return renderSection('Package Details', {
         packages: leadData.packages,
         packageType: leadData.packageType,
@@ -148,12 +148,12 @@ const ReviewForm = ({ leadData, setLeadData, setActiveStep }) => {
       }, 'package');
     } else {
       return renderSection('Service Details', {
-        servicesRequested: leadData.servicesRequested,
-        socialMediaManagementRequirement: leadData.socialMediaManagementRequirement,
-        websiteDevelopmentRequirement: leadData.websiteDevelopmentRequirement,
-        brandingRequirement: leadData.brandingRequirement,
-        ecommerceListingPlatforms: leadData.ecommerceListingPlatforms,
-        quickCommercePlatforms: leadData.quickCommercePlatforms,
+        servicesRequested: leadData.servicesRequested || [],
+        socialMediaManagementRequirement: leadData.socialMediaManagementRequirement || [],
+        websiteDevelopmentRequirement: leadData.websiteDevelopmentRequirement || '',
+        brandingRequirement: leadData.brandingRequirement || [],
+        ecommerceListingPlatforms: leadData.ecommerceListingPlatforms || [],
+        quickCommercePlatforms: leadData.quickCommercePlatforms || [],
         quotationFile: leadData.quotationFile ? leadData.quotationFile.name : 'No file uploaded',
       }, 'service');
     }
@@ -174,8 +174,8 @@ const ReviewForm = ({ leadData, setLeadData, setActiveStep }) => {
     };
 
     const getPackageDuration = () => {
-      if (leadData.packages && leadData.packageType) {
-        return packageDurations[leadData.packages][leadData.packageType];
+      if (leadData.packages && leadData.packages !== 'NA' && leadData.packageType && packageDurations[leadData.packages]) {
+        return packageDurations[leadData.packages][leadData.packageType] || null;
       }
       return null;
     };
@@ -183,21 +183,21 @@ const ReviewForm = ({ leadData, setLeadData, setActiveStep }) => {
     const packageDuration = getPackageDuration();
 
     const deadlineData = {
-      tentativeDeadlineByCustomer: leadData.tentativeDeadlineByCustomer,
+      tentativeDeadlineByCustomer: leadData.tentativeDeadlineByCustomer || 'Not set',
     };
 
     if (packageDuration) {
       deadlineData.packageDuration = `${packageDuration} days [after Onboarding]`;
       deadlineData.variations = `Up to ${leadData.packageType === 'Silver' ? '3' : leadData.packageType === 'Gold' ? '4' : '5'} Variations in Each`;
     } else {
-      if (leadData.servicesRequested.includes('Website Development')) {
-        deadlineData.websiteDevelopmentTime = `${leadData.websiteDevelopmentTime} days`;
+      if (leadData.servicesRequested && leadData.servicesRequested.includes('Website Development')) {
+        deadlineData.websiteDevelopmentTime = `${leadData.websiteDevelopmentTime || 'Not set'} days`;
       }
-      if (leadData.servicesRequested.includes('Branding')) {
-        deadlineData.brandingTime = `${leadData.brandingTime} days`;
+      if (leadData.servicesRequested && leadData.servicesRequested.includes('Branding')) {
+        deadlineData.brandingTime = `${leadData.brandingTime || 'Not set'} days`;
       }
-      if (leadData.servicesRequested.includes('Social Media Management')) {
-        deadlineData.socialMediaTime = `${leadData.socialMediaTime} days`;
+      if (leadData.servicesRequested && leadData.servicesRequested.includes('Social Media Management')) {
+        deadlineData.socialMediaTime = `${leadData.socialMediaTime || 'Not set'} days`;
       }
     }
 
@@ -209,39 +209,39 @@ const ReviewForm = ({ leadData, setLeadData, setActiveStep }) => {
       <Typography variant="h5" sx={{ color: 'white', mb: 4 }}>Review Your Information</Typography>
       
       {renderSection('Basic Information', {
-        email: leadData.email,
-        bdaName: leadData.bdaName,
-        companyName: leadData.companyName,
-        clientName: leadData.clientName,
-        clientEmail: leadData.clientEmail,
-        clientDesignation: leadData.clientDesignation,
-        contactNumber: leadData.contactNumber,
-        alternateContactNo: leadData.alternateContactNo,
-        companyOffering: leadData.companyOffering,
-        companyIndustry: leadData.companyIndustry,
+        email: leadData.email || '',
+        bdaName: leadData.bdaName || '',
+        companyName: leadData.companyName || '',
+        clientName: leadData.clientName || '',
+        clientEmail: leadData.clientEmail || '',
+        clientDesignation: leadData.clientDesignation || '',
+        contactNumber: leadData.contactNumber || '',
+        alternateContactNo: leadData.alternateContactNo || '',
+        companyOffering: leadData.companyOffering || '',
+        companyIndustry: leadData.companyIndustry || '',
       }, 'basic')}
 
       {renderServiceOrPackageDetails()}
 
       {renderSection('Payment Details', {
-        totalServiceFeesCharged: leadData.totalServiceFeesCharged,
-        gstBill: leadData.gstBill,
-        amountWithoutGST: leadData.amountWithoutGST,
-        paymentDate: leadData.paymentDate,
-        paymentDone: leadData.paymentDone,
+        totalServiceFeesCharged: leadData.totalServiceFeesCharged || '',
+        gstBill: leadData.gstBill || '',
+        amountWithoutGST: leadData.amountWithoutGST || '',
+        paymentDate: leadData.paymentDate || '',
+        paymentDone: leadData.paymentDone || '',
         proofOfApprovalForPartialPayment: leadData.proofOfApprovalForPartialPayment ? leadData.proofOfApprovalForPartialPayment.name : 'No file uploaded',
-        actualAmountReceived: leadData.actualAmountReceived,
-        pendingAmount: leadData.pendingAmount,
-        pendingAmountDueDate: leadData.pendingAmountDueDate,
-        paymentMode: leadData.paymentMode,
+        actualAmountReceived: leadData.actualAmountReceived || '',
+        pendingAmount: leadData.pendingAmount || '',
+        pendingAmountDueDate: leadData.pendingAmountDueDate || '',
+        paymentMode: leadData.paymentMode || '',
       }, 'payment')}
 
       {renderDeadlineInformation()}
 
       {renderSection('Final Details', {
-        servicePromisedByBDA: leadData.servicePromisedByBDA,
-        extraServiceRequested: leadData.extraServiceRequested,
-        importantInformation: leadData.importantInformation,
+        servicePromisedByBDA: leadData.servicePromisedByBDA || '',
+        extraServiceRequested: leadData.extraServiceRequested || '',
+        importantInformation: leadData.importantInformation || '',
       }, 'final')}
     </Box>
   );

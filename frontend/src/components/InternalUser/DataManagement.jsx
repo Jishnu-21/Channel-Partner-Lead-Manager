@@ -87,7 +87,9 @@ const DataManagement = () => {
       (lead.companyName.toLowerCase().includes(term) ||
        lead.clientName.toLowerCase().includes(term) ||
        lead.clientEmail.toLowerCase().includes(term)) &&
-      (packageType === '' || lead.packageType === packageType) &&
+      (packageType === '' || 
+       (lead.packages !== 'NA' && lead.packageType === packageType) ||
+       (lead.packages === 'NA' && lead.servicesRequested?.includes(packageType))) &&
       (company === '' || lead.companyName === company)
     );
     setFilteredLeads(filtered);
@@ -127,7 +129,12 @@ const DataManagement = () => {
 
   const renderValue = (value) => value || "NA";
 
-  const uniquePackages = [...new Set(leads.map(lead => lead.packageType).filter(Boolean))];
+  const uniquePackages = [
+    ...new Set([
+      ...leads.filter(lead => lead.packages !== 'NA').map(lead => lead.packageType),
+      ...leads.filter(lead => lead.packages === 'NA').flatMap(lead => lead.servicesRequested || [])
+    ].filter(Boolean))
+  ];
   const uniqueCompanies = [...new Set(leads.map(lead => lead.companyName))];
 
   return (
@@ -194,7 +201,11 @@ const DataManagement = () => {
                     <TableCell>{new Date(lead.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>{renderValue(lead.clientName)}</TableCell>
                     <TableCell>{renderValue(lead.companyName)}</TableCell>
-                    <TableCell>{renderValue(lead.packageType || lead.servicesRequested?.join(', '))}</TableCell>
+                    <TableCell>
+                      {lead.packages === 'NA' 
+                        ? renderValue(lead.servicesRequested?.join(', '))
+                        : renderValue(`${lead.packages} - ${lead.packageType}`)}
+                    </TableCell>
                     <TableCell>{renderValue(lead.paymentDone)}</TableCell>
                     <TableCell>
                       <IconButton onClick={() => handleDetailsClick(lead)} color="primary">

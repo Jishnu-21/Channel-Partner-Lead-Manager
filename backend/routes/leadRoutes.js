@@ -1,5 +1,5 @@
 const express = require('express');
-const { createLead, getLeads, getLeadsByBDA, updateLead } = require('../controllers/leadController');
+const { createLead, getLeads, getLeadsByBDA, updateLead ,downloadProof} = require('../controllers/leadController');
 const multer = require('multer');
 
 const router = express.Router();
@@ -25,6 +25,9 @@ router.post('/', upload.fields([
 
 // Route to get all leads
 router.get('/', getLeads);
+
+router.get('/download-proof/:filename',downloadProof);
+
 
 // Route to get leads by BDA name
 router.get('/bda', getLeadsByBDA);

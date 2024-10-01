@@ -8,20 +8,22 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Badge,
 } from '@mui/material';
 import { 
   LayoutDashboard, 
   Table as TableIcon, 
   Menu as MenuIcon, 
   LogOut,
-  CreditCard 
+  CreditCard,
+  Bell as BellIcon
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../features/userSlice'; // Update with your actual path
 import { toast } from 'sonner'; 
 import { useNavigate } from 'react-router-dom';
 
-const Sidebar = ({ drawerOpen, setDrawerOpen, setActiveView, resetFilter }) => {
+const Sidebar = ({ drawerOpen, setDrawerOpen, setActiveView, resetFilter, notificationCount }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -70,12 +72,15 @@ const Sidebar = ({ drawerOpen, setDrawerOpen, setActiveView, resetFilter }) => {
       >
         <Toolbar />
         <List>
-          {['Dashboard', 'Payment Dashboard', 'Data Management'].map((text, index) => (
+          {['Dashboard', 'Payment Dashboard', 'Data Management', 'Notifications'].map((text, index) => (
             <ListItem button key={text} onClick={() => handleViewChange(text.toLowerCase().replace(' ', ''))}>
               <ListItemIcon>
                 {index === 0 ? <LayoutDashboard /> : 
                  index === 1 ? <CreditCard /> : 
-                 <TableIcon />}
+                 index === 2 ? <TableIcon /> :
+                 <Badge badgeContent={notificationCount} color="secondary">
+                   <BellIcon />
+                 </Badge>}
               </ListItemIcon>
               <ListItemText primary={text} />
             </ListItem>

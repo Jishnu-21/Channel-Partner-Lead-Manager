@@ -63,12 +63,12 @@ const PaymentDashboard = () => {
     }
   };
 
-  const filterLeadsByDateRange = (leads) => {
-    if (!startDate && !endDate) return leads;
+  const filterLeadsByDateRangeAndPartner = (leads) => {
     return leads.filter((lead) => {
       const leadDate = new Date(lead.createdAt);
       if (startDate && leadDate < startDate) return false;
       if (endDate && leadDate > endDate) return false;
+      if (selectedPartner && lead.bdaName !== selectedPartner) return false;
       return true;
     });
   };
@@ -100,12 +100,56 @@ const PaymentDashboard = () => {
   const getFullPayments = (leads) => leads.filter(lead => lead.paymentDone === 'Full In Advance').length;
   const getPartialPayments = (leads) => leads.filter(lead => lead.paymentDone === 'Partial Payment').length;
 
-  const handleDownloadProof = (proofUrl) => {
-    // Implement the download functionality here
-    // This could be a direct download link or an API call to get the file
-    console.log('Downloading proof:', proofUrl);
-    // For example:
-    // window.open(proofUrl, '_blank');
+  const getTotalRevenueWithoutGST = (leads) => {
+    return leads.reduce((sum, lead) => {
+      const totalAmount = lead.actualAmountReceived || 0;
+      // Assuming GST is 18%. Adjust this value if the GST rate is different.
+      const amountWithoutGST = totalAmount / 1.18;
+      return sum + amountWithoutGST;
+    }, 0);
+  };
+
+  const handleDownloadProof = async (proofPath) => {
+    if (!proofPath) {
+      toast.error('No payment proof available');
+      return;
+    }
+
+    console.log('Original proofPath:', proofPath);
+
+    // Remove 'uploads\' from the start of the path
+    const cleanProofPath = proofPath.replace(/^uploads\\/, '');
+    console.log('Cleaned proofPath:', cleanProofPath);
+
+    const downloadUrl = `http://localhost:5000/leads/download-proof/${encodeURIComponent(cleanProofPath)}`;
+    console.log('Attempting to download from:', downloadUrl);
+
+    try {
+      const response = await axios.get(downloadUrl, {
+        responseType: 'blob',
+      });
+
+      // Create a Blob from the response data
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+      // Create a link element and trigger the download
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = cleanProofPath.split('\\').pop(); // Extract filename from path
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up
+      window.URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error('Error downloading proof:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+      }
+      toast.error('Failed to download payment proof');
+    }
   };
 
   const formatDate = (dateString) => {
@@ -122,7 +166,7 @@ const PaymentDashboard = () => {
     );
   }
 
-  const filteredLeads = filterLeadsByDateRange(selectedLeads);
+  const filteredLeads = filterLeadsByDateRangeAndPartner(selectedLeads);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -158,18 +202,26 @@ const PaymentDashboard = () => {
       </Grid>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={selectedPartner ? 2 : 3}>
           <StatsCard title="Total Revenue" value={`₹${getTotalRevenue(filteredLeads).toFixed(2)}`} />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={selectedPartner ? 2 : 3}>
           <StatsCard title="Pending Amount" value={`₹${getPendingAmount(filteredLeads).toFixed(2)}`} />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={selectedPartner ? 2 : 3}>
           <StatsCard title="Full Payments" value={getFullPayments(filteredLeads)} />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={selectedPartner ? 2 : 3}>
           <StatsCard title="Partial Payments" value={getPartialPayments(filteredLeads)} />
         </Grid>
+        {selectedPartner && (
+          <Grid item xs={12} sm={6} md={4}>
+            <StatsCard 
+              title="Revenue (without GST)" 
+              value={`₹${getTotalRevenueWithoutGST(filteredLeads).toFixed(2)}`} 
+            />
+          </Grid>
+        )}
       </Grid>
 
       <Card>
@@ -182,6 +234,7 @@ const PaymentDashboard = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Company Name</TableCell>
+                  <TableCell>BDA Name</TableCell>
                   <TableCell>Total Service Fee</TableCell>
                   <TableCell>Amount Received</TableCell>
                   <TableCell>Pending Amount</TableCell>
@@ -194,17 +247,18 @@ const PaymentDashboard = () => {
                 {filteredLeads.map((lead, index) => (
                   <TableRow key={index}>
                     <TableCell>{lead.companyName}</TableCell>
-                    <TableCell>₹{lead.totalServiceFeesCharged?.toFixed(2) || '0.00'}</TableCell>
-                    <TableCell>₹{lead.actualAmountReceived?.toFixed(2) || '0.00'}</TableCell>
-                    <TableCell>₹{(lead.totalServiceFeesCharged - lead.actualAmountReceived).toFixed(2)}</TableCell>
+                    <TableCell>{lead.bdaName}</TableCell>
+                    <TableCell>₹{(lead.totalServiceFeesCharged || 0).toFixed(2)}</TableCell>
+                    <TableCell>₹{(lead.actualAmountReceived || 0).toFixed(2)}</TableCell>
+                    <TableCell>₹{((lead.totalServiceFeesCharged || 0) - (lead.actualAmountReceived || 0)).toFixed(2)}</TableCell>
                     <TableCell>{lead.paymentDone}</TableCell>
                     <TableCell>{formatDate(lead.pendingAmountDueDate)}</TableCell>
                     <TableCell>
-                      {lead.paymentProofUrl ? (
+                      {lead.paymentProof ? (
                         <Button 
                           variant="contained" 
                           size="small" 
-                          onClick={() => handleDownloadProof(lead.paymentProofUrl)}
+                          onClick={() => handleDownloadProof(lead.paymentProof)}
                         >
                           Download Proof
                         </Button>

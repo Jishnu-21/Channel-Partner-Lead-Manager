@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Grid, Box, Button, TextField, CircularProgress, Card, CardContent,Chip } from '@mui/material';
+import { 
+  Container, 
+  Typography, 
+  Grid, 
+  Box, 
+  Button, 
+  TextField, 
+  CircularProgress, 
+  Chip,
+  Tooltip,
+  Paper
+} from '@mui/material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import StatsCard from './StatsCard';
 import PartnerSelector from './PartnerSelector';
 import LeadsByPartnerChart from './LeadsByPartnerChart';
 import OrdersByIndustryChart from './OrdersByIndustryChart';
+import ServiceDistributionChart from './ServiceDistributionChart';
+import PackageDistributionChart from './PackageDistributionChart';
 import { downloadCSV } from './utils';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -72,7 +85,7 @@ const Dashboard = () => {
   };
 
   const processData = (leads) => {
-    const filteredLeads = filterLeadsByDateRange(leads);
+    const filteredLeads = filterLeadsByDateRangeAndPartner(leads);
     const processedChannelData = processDataByKey(filteredLeads, 'bdaName');
     setChannelPartnerData(processedChannelData);
   };
@@ -82,7 +95,7 @@ const Dashboard = () => {
     data.forEach((lead) => {
       const date = new Date(lead.createdAt);
       if (!isNaN(date.getTime())) {
-        const dateKey = getDateKey(date);
+        const dateKey = date.toISOString().split('T')[0]; // Use YYYY-MM-DD format
         const partnerKey = lead[key];
         if (!counts[dateKey]) counts[dateKey] = {};
         counts[dateKey][partnerKey] = (counts[dateKey][partnerKey] || 0) + 1;
@@ -93,16 +106,12 @@ const Dashboard = () => {
       .sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
-  const getDateKey = (date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  };
-
-  const filterLeadsByDateRange = (leads) => {
-    if (!startDate && !endDate) return leads;
+  const filterLeadsByDateRangeAndPartner = (leads, partner = selectedPartner) => {
     return leads.filter((lead) => {
       const leadDate = new Date(lead.createdAt);
       if (startDate && leadDate < startDate) return false;
       if (endDate && leadDate > endDate) return false;
+      if (partner && lead.bdaName !== partner) return false;
       return true;
     });
   };
@@ -117,11 +126,11 @@ const Dashboard = () => {
   };
 
   const handlePartnerChange = (event) => {
-    setSelectedPartner(event.target.value);
-    const filteredLeads = selectedLeads.filter(lead => 
-      event.target.value === '' || lead.bdaName === event.target.value
-    );
-    processData(filteredLeads);
+    const newSelectedPartner = event.target.value;
+    setSelectedPartner(newSelectedPartner);
+    const filteredLeads = filterLeadsByDateRangeAndPartner(selectedLeads, newSelectedPartner);
+    const processedChannelData = processDataByKey(filteredLeads, 'bdaName');
+    setChannelPartnerData(processedChannelData);
   };
 
   const handleStartDateChange = (date) => {
@@ -132,8 +141,58 @@ const Dashboard = () => {
   const getTotalLeads = (leads) => leads.length;
   const getShuruvat = (leads) => leads.filter(lead => lead.packages === 'Shuruvat').length;
   const getUnnati = (leads) => leads.filter(lead => lead.packages === 'Unnati').length;
-  const getServices = (leads) => leads.filter(lead => !lead.packages || lead.packages === '').length;
+  const getServices = (leads) => leads.filter(lead => 
+    lead.packages === 'NA' && lead.servicesRequested && lead.servicesRequested.length > 0
+  ).length;
 
+  const getPackageCompanies = (packageType, leads) => {
+    return leads
+      .filter(lead => lead.packages === packageType)
+      .map(lead => lead.companyName)
+      .filter(Boolean);
+  };
+
+  const getServicesCompanies = (leads) => {
+    return leads
+      .filter(lead => 
+        lead.packages === 'NA' && lead.servicesRequested && lead.servicesRequested.length > 0
+      )
+      .map(lead => lead.companyName)
+      .filter(Boolean);
+  };
+
+  const getServiceDistribution = (leads) => {
+    const distribution = {};
+    const companyNames = {};
+    leads.forEach(lead => {
+      if (lead.packages === 'NA' && lead.servicesRequested) {
+        lead.servicesRequested.forEach(service => {
+          distribution[service] = (distribution[service] || 0) + 1;
+          if (!companyNames[service]) companyNames[service] = new Set();
+          companyNames[service].add(lead.companyName);
+        });
+      }
+    });
+    return { 
+      distribution, 
+      companyNames: Object.fromEntries(Object.entries(companyNames).map(([k, v]) => [k, Array.from(v)]))
+    };
+  };
+
+  const getPackageDistribution = (leads) => {
+    const distribution = {
+      Shuruvat: getShuruvat(leads),
+      Unnati: getUnnati(leads),
+      Services: getServices(leads)
+    };
+    const companyNames = {
+      Shuruvat: getPackageCompanies('Shuruvat', leads),
+      Unnati: getPackageCompanies('Unnati', leads),
+      Services: getServicesCompanies(leads)
+    };
+    return { distribution, companyNames };
+  };
+  
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
@@ -145,115 +204,125 @@ const Dashboard = () => {
   if (selectedLeads.length === 0) {
     return (
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Dashboard
-        </Typography>
-        <Typography variant="body1">
-          No Orders found. Please add some leads to view the dashboard.
-        </Typography>
+        <Typography variant="h4" gutterBottom>Dashboard</Typography>
+        <Typography variant="body1">No Orders found. Please add some leads to view the dashboard.</Typography>
       </Container>
     );
   }
 
-  const filteredLeads = filterLeadsByDateRange(selectedLeads);
+  const filteredLeads = filterLeadsByDateRangeAndPartner(selectedLeads);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        Dashboard
-      </Typography>
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <PartnerSelector 
-            uniquePartners={uniquePartners} 
-            selectedPartner={selectedPartner} 
-            handlePartnerChange={handlePartnerChange} 
-          />
+      <Typography variant="h4" gutterBottom>Dashboard</Typography>
+      
+      <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={4}>
+            <PartnerSelector 
+              uniquePartners={uniquePartners} 
+              selectedPartner={selectedPartner} 
+              handlePartnerChange={handlePartnerChange} 
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <DatePicker
+              selected={startDate}
+              onChange={handleStartDateChange}
+              customInput={<TextField fullWidth label="Start Date" />}
+              dateFormat="MMMM d, yyyy"
+              placeholderText="Select Start Date"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <DatePicker
+              selected={endDate}
+              onChange={handleEndDateChange}
+              customInput={<TextField fullWidth label="End Date" />}
+              dateFormat="MMMM d, yyyy"
+              placeholderText="Select End Date"
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <DatePicker
-            selected={startDate}
-            onChange={handleStartDateChange}
-            customInput={
-              <TextField
-                fullWidth
-                label="Start Date"
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
-            }
-            dateFormat="MMMM d, yyyy"
-            placeholderText="Select Start Date"
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <DatePicker
-            selected={endDate}
-            onChange={handleEndDateChange}
-            customInput={
-              <TextField
-                fullWidth
-                label="End Date"
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
-            }
-            dateFormat="MMMM d, yyyy"
-            placeholderText="Select End Date"
-          />
-        </Grid>
-      </Grid>
+      </Paper>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard title="Total Orders" value={getTotalLeads(filteredLeads)} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard title="Shuruvat Packages" value={getShuruvat(filteredLeads)} />
+          <Tooltip title={getPackageCompanies('Shuruvat', filteredLeads).join(', ')} arrow>
+            <div>
+              <StatsCard title="Shuruvat Packages" value={getShuruvat(filteredLeads)} />
+            </div>
+          </Tooltip>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard title="Unnati Packages" value={getUnnati(filteredLeads)} />
+          <Tooltip title={getPackageCompanies('Unnati', filteredLeads).join(', ')} arrow>
+            <div>
+              <StatsCard title="Unnati Packages" value={getUnnati(filteredLeads)} />
+            </div>
+          </Tooltip>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-        <StatsCard title="Services" value={getServices(filteredLeads)} />
-      </Grid>
-      </Grid>
-
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Companies
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {companies.map((company, index) => (
-                  <Chip key={index} label={company} />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
+          <Tooltip title={getServicesCompanies(filteredLeads).join(', ')} arrow>
+            <div>
+              <StatsCard title="Services" value={getServices(filteredLeads)} />
+            </div>
+          </Tooltip>
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
+        <Typography variant="subtitle1" gutterBottom>Companies</Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          {companies.map((company, index) => (
+            <Chip key={index} label={company} size="small" />
+          ))}
+        </Box>
+      </Paper>
+
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={8}>
+          <Paper elevation={3} sx={{ p: 2, height: '400px' }}>
+            <LeadsByPartnerChart 
+              data={channelPartnerData} 
+              title="Orders by BDA" 
+              selectedPartner={selectedPartner}
+              uniquePartners={uniquePartners}
+            />
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper elevation={3} sx={{ p: 2, height: '400px' }}>
+            <PackageDistributionChart 
+              data={getPackageDistribution(filteredLeads).distribution} 
+              companyNames={getPackageDistribution(filteredLeads).companyNames}
+              title="Package Distribution" 
+            />
+          </Paper>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} md={6}>
-          <LeadsByPartnerChart 
-            data={channelPartnerData} 
-            title="Orders by BDA" 
-            selectedPartner={selectedPartner}
-            uniquePartners={uniquePartners}
-          />
+          <Paper elevation={3} sx={{ p: 2, height: '350px' }}>
+            <OrdersByIndustryChart data={filteredLeads} title="Orders by Industry" />
+          </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
-          <OrdersByIndustryChart data={filteredLeads} title="Orders by Industry" />
+          <Paper elevation={3} sx={{ p: 2, height: '350px' }}>
+            <ServiceDistributionChart 
+              data={getServiceDistribution(filteredLeads).distribution} 
+              companyNames={getServiceDistribution(filteredLeads).companyNames}
+              title="Service Distribution" 
+            />
+          </Paper>
         </Grid>
       </Grid>
 
-      <Box mt={4} textAlign="right">
-        <Button variant="contained" color="primary" onClick={() => downloadCSV(channelPartnerData)}>
+      <Box mt={3} textAlign="right">
+        <Button variant="contained" color="primary" size="small" onClick={() => downloadCSV(channelPartnerData)}>
           Download CSV
         </Button>
       </Box>

@@ -1,5 +1,23 @@
 const mongoose = require('mongoose');
 
+// Helper function to create a custom field with validation and empty array handling
+const createPlatformField = (validPlatforms) => ({
+  type: [String],
+  set: function(v) {
+    // If it's an empty array or falsy value, set it to undefined
+    return (Array.isArray(v) && v.length === 0) || !v ? undefined : v;
+  },
+  validate: {
+    validator: function(v) {
+      // Allow undefined
+      if (v === undefined) return true;
+      // Validate non-empty arrays
+      return Array.isArray(v) && v.every(platform => validPlatforms.includes(platform));
+    },
+    message: props => `${props.path} contains invalid platforms: ${props.value}`
+  }
+});
+
 const leadSchema = new mongoose.Schema({
   // Basic Information
   contactNumber: {
@@ -46,11 +64,11 @@ const leadSchema = new mongoose.Schema({
   // Service Details
   packages: {
     type: String,
-    enum: ['Shuruvat', 'Unnati',' '],
+    enum: ['Shuruvat', 'Unnati','NA'],
   },
   packageType: {
     type: String,
-    enum: ['Silver', 'Gold', 'Platinum',' '],
+    enum: ['Silver', 'Gold', 'Platinum','NA'],
   },
   servicesRequested: {
     type: [String],
@@ -58,7 +76,7 @@ const leadSchema = new mongoose.Schema({
   },
   socialMediaManagementRequirement: {
     type: [String],
-    enum: ['Instagram', 'WhatsApp', 'Youtube', 'Pinterest', 'Linkedin', 'Other'],
+    enum: ['Instagram', 'WhatsApp', 'Youtube', 'Pinterest', 'Linkedin', 'Other','Facebook'],
   },
   websiteDevelopmentRequirement: {
     type: String,
@@ -67,6 +85,14 @@ const leadSchema = new mongoose.Schema({
   brandingRequirement: {
     type: [String],
     enum: ['Logo Creation', 'Brand Positioning', 'Tagline and Slogan', 'Packing and Graphics', 'Other'],
+  },
+  ecommerceListingPlatforms: {
+    type: [String],
+    default: undefined
+  },
+  quickCommercePlatforms: {
+    type: [String],
+    default: undefined
   },
   quotationFile: {
     type: String, // This will store the URL or path to the uploaded file
@@ -138,4 +164,36 @@ const leadSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-module.exports = mongoose.model('Lead', leadSchema);
+const validEcommercePlatforms = ['Amazon', 'Flipkart', 'Meesho', 'Jiomart', 'Other'];
+const validQuickCommercePlatforms = ['Swiggy', 'Zomato', 'Dunzo', 'Other'];
+
+// Custom validator function
+function validatePlatforms(platforms, validPlatforms) {
+  if (!platforms || platforms.length === 0) return true;
+  return platforms.every(platform => validPlatforms.includes(platform));
+}
+
+// Pre-save hook for validation
+leadSchema.pre('validate', function(next) {
+  if (this.ecommerceListingPlatforms && this.ecommerceListingPlatforms.length === 0) {
+    this.ecommerceListingPlatforms = undefined;
+  }
+  if (this.quickCommercePlatforms && this.quickCommercePlatforms.length === 0) {
+    this.quickCommercePlatforms = undefined;
+  }
+  next();
+});
+
+leadSchema.pre('save', function(next) {
+  if (this.ecommerceListingPlatforms && !this.ecommerceListingPlatforms.every(platform => validEcommercePlatforms.includes(platform))) {
+    return next(new Error('ecommerceListingPlatforms contains invalid platforms'));
+  }
+  if (this.quickCommercePlatforms && !this.quickCommercePlatforms.every(platform => validQuickCommercePlatforms.includes(platform))) {
+    return next(new Error('quickCommercePlatforms contains invalid platforms'));
+  }
+  next();
+});
+
+const Lead = mongoose.model('Lead', leadSchema);
+
+module.exports = Lead;

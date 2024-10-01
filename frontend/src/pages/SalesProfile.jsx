@@ -3,7 +3,6 @@ import {
   Box, 
   Typography, 
   TextField, 
-  Button, 
   Table, 
   TableBody, 
   TableCell, 
@@ -23,12 +22,10 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { API_URL } from '../config';
 import LeadDetailsDialog from '../components/Sales/LeadDetailsDialog';
-import EditLeadDialog from '../components/Sales/EditLeadDIalog';
 import { useNavigate } from 'react-router-dom';
 
 const SalesProfilePage = () => {
@@ -36,8 +33,6 @@ const SalesProfilePage = () => {
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [editLead, setEditLead] = useState(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [packageFilter, setPackageFilter] = useState('');
@@ -63,6 +58,7 @@ const SalesProfilePage = () => {
       const response = await axios.get(`${API_URL}/leads/bda?bdaName=${user.username}`);
       setLeads(response.data);
       setFilteredLeads(response.data);
+      console.log('Fetched leads:', response.data);
     } catch (error) {
       toast.error('Failed to fetch leads');
     }
@@ -94,32 +90,10 @@ const SalesProfilePage = () => {
       (lead.companyName.toLowerCase().includes(term) ||
        lead.clientName.toLowerCase().includes(term) ||
        lead.clientEmail.toLowerCase().includes(term)) &&
-      (packageType === '' || lead.packageType === packageType) &&
+      (packageType === '' || lead.packages === packageType || lead.packageType === packageType) &&
       (company === '' || lead.companyName === company)
     );
     setFilteredLeads(filtered);
-  };
-
-  const handleEditClick = (lead) => {
-    setEditLead(lead);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleEditClose = () => {
-    setIsEditDialogOpen(false);
-    setEditLead(null);
-  };
-
-  const handleEditSave = async (field, value) => {
-    try {
-      const updatedLead = { ...editLead, [field]: value };
-      await axios.put(`${API_URL}/leads/${editLead._id}`, updatedLead);
-      toast.success('Lead updated successfully');
-      fetchLeads();
-      handleEditClose();
-    } catch (error) {
-      toast.error('Failed to update lead');
-    }
   };
 
   const handleDetailsClick = (lead) => {
@@ -140,13 +114,20 @@ const SalesProfilePage = () => {
     setPage(newPage);
   };
 
-  const renderValue = (value) => value || "NA";
+  const renderValue = (value) => {
+    if (typeof value === 'function') {
+      return value();
+    }
+    return value || "NA";
+  };
 
   if (!user) {
     return <Typography>Loading...</Typography>;
   }
 
-  const uniquePackages = [...new Set(leads.map(lead => lead.packageType).filter(Boolean))];
+  const uniquePackages = [...new Set(leads.flatMap(lead => 
+    [lead.packages, lead.packageType].filter(Boolean)
+  ))];
   const uniqueCompanies = [...new Set(leads.map(lead => lead.companyName))];
 
   const paginatedLeads = filteredLeads.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -222,14 +203,25 @@ const SalesProfilePage = () => {
                   <TableCell>{new Date(lead.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>{renderValue(lead.clientName)}</TableCell>
                   <TableCell>{renderValue(lead.companyName)}</TableCell>
-                  <TableCell>{renderValue(lead.packageType || lead.servicesRequested?.join(', '))}</TableCell>
+                  <TableCell>
+                    {renderValue(() => {
+                      if (lead.packages === 'NA') {
+                        return lead.servicesRequested?.join(', ') || 'N/A';
+                      } else if (lead.packages && lead.packageType) {
+                        return `${lead.packages} - ${lead.packageType}`;
+                      } else if (lead.packages) {
+                        return lead.packages;
+                      } else if (lead.packageType) {
+                        return lead.packageType;
+                      } else {
+                        return 'N/A';
+                      }
+                    })}
+                  </TableCell>
                   <TableCell>{renderValue(lead.paymentDone)}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleDetailsClick(lead)} color="primary">
                       <VisibilityIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleEditClick(lead)} color="secondary">
-                      <EditIcon />
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -246,13 +238,6 @@ const SalesProfilePage = () => {
           />
         </Paper>
       </Container>
-
-      <EditLeadDialog
-        open={isEditDialogOpen}
-        onClose={handleEditClose}
-        lead={editLead}
-        onSave={handleEditSave}
-      />
 
       <LeadDetailsDialog
         open={isDetailsDialogOpen}

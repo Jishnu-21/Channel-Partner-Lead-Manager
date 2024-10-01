@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Grid, 
-  FormControl, 
-  InputLabel, 
-  Select, 
+import {
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
   MenuItem,
+  OutlinedInput,
   Checkbox,
   ListItemText,
-  OutlinedInput,
+  FormHelperText,
   Button,
   Typography,
-  FormHelperText,
+  Box,
 } from '@mui/material';
 
 const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadData, setErrors }) => {
@@ -24,88 +25,60 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
   const [quickCommercePlatforms, setQuickCommercePlatforms] = useState([]);
   const [formErrors, setFormErrors] = useState({});
 
-  const packages = ['Shuruvat', 'Unnati'];
+  const services = ['Website Development', 'Social Media Management', 'Branding', 'Ecommerce Listing', 'Quick Commerce'];
+  const packages = ['Shuruvat', 'Unnati',];
   const packageTypes = ['Silver', 'Gold', 'Platinum'];
-  const services = ['Social Media Management', 'Website Development', 'Branding', 'Performance Marketing','Ecommerce Listing', 'Quick Commerce', 'Lead Generation', 'SEO', 'ProductCreation', 'Graphics Design'];
-  const socialMediaPlatforms = ['Instagram', 'WhatsApp', 'Youtube', 'Pinterest', 'Linkedin', 'Other'];
-  const brandingOptions = ['Logo Creation', 'Brand Positioning', 'Tagline and Slogan', 'Packing and Graphics', 'Other'];
-  const ecommercePlatforms = ['Amazon', 'Flipkart', 'Nykaa', 'Myntra'];
-  const quickCommercePlatformOptions = ['Zepto', 'Blinkit', 'Dunzo'];
+  const socialMediaPlatforms = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'YouTube'];
+  const brandingServices = ['Logo Design', 'Business Card Design', 'Brochure Design', 'Packaging Design'];
+  const ecommercePlatforms = ['Amazon', 'Flipkart', 'Meesho', 'Myntra', 'Ajio'];
+  const quickCommercePlatformOptions = ['Swiggy Instamart', 'Blinkit', 'Zepto', 'Big Basket'];
 
   useEffect(() => {
-    setLeadData(prevData => ({
-      ...prevData,
-      websiteDevelopmentTime: '',
-      brandingTime: '',
-      socialMediaTime: '',
-      packages: '',
-      packageType: '',
-      servicesRequested: [],
-      ecommerceListingPlatforms: [],
-      quickCommercePlatforms: [],
-    }));
-    setPackageType('');
+    if (selectionType === 'services') {
+      setLeadData(prevData => ({
+        ...prevData,
+        packages: 'NA',
+        packageType: 'NA',
+        servicesRequested: [],
+        socialMediaManagementRequirement: [],
+        websiteDevelopmentRequirement: '',
+        brandingRequirement: [],
+        ecommerceListingPlatforms: [],
+        quickCommercePlatforms: [],
+      }));
+    } else {
+      setLeadData(prevData => ({
+        ...prevData,
+        packages: '',
+        packageType: '',
+        servicesRequested: [],
+        socialMediaManagementRequirement: [],
+        websiteDevelopmentRequirement: '',
+        brandingRequirement: [],
+        ecommerceListingPlatforms: [],
+        quickCommercePlatforms: [],
+      }));
+    }
     setSelectedServices([]);
+    setSocialMediaRequirements([]);
+    setWebsiteDevelopmentRequirement('');
+    setBrandingRequirements([]);
+    setPackageType('');
     setEcommerceListingPlatforms([]);
     setQuickCommercePlatforms([]);
-  }, [selectionType, setLeadData]);
-
-  useEffect(() => {
-    validateForm();
-  }, [selectionType, leadData, selectedServices, socialMediaRequirements, websiteDevelopmentRequirement, brandingRequirements, packageType, ecommerceListingPlatforms, quickCommercePlatforms]);
-
-  const validateForm = () => {
-    const errors = {};
-
-    if (!selectionType) {
-      errors.selectionType = 'Please select a type';
-    }
-
-    if (selectionType === 'packages') {
-      if (!leadData.packages) {
-        errors.packages = 'Please select a package';
-      }
-      if ((leadData.packages === 'Shuruvat' || leadData.packages === 'Unnati') && !packageType) {
-        errors.packageType = 'Please select a package type';
-      }
-    }
-
-    if (selectionType === 'services') {
-      if (selectedServices.length === 0) {
-        errors.servicesRequested = 'Please select at least one service';
-      }
-      if (selectedServices.includes('Social Media Management') && socialMediaRequirements.length === 0) {
-        errors.socialMediaManagementRequirement = 'Please select social media platforms';
-      }
-      if (selectedServices.includes('Website Development') && !websiteDevelopmentRequirement) {
-        errors.websiteDevelopmentRequirement = 'Please select a website development requirement';
-      }
-      if (selectedServices.includes('Branding') && brandingRequirements.length === 0) {
-        errors.brandingRequirement = 'Please select branding requirements';
-      }
-      if (selectedServices.includes('Ecommerce Listing') && ecommerceListingPlatforms.length === 0) {
-        errors.ecommerceListingPlatforms = 'Please select ecommerce listing platforms';
-      }
-      if (selectedServices.includes('Quick Commerce') && quickCommercePlatforms.length === 0) {
-        errors.quickCommercePlatforms = 'Please select quick commerce platforms';
-      }
-    }
-
-    if (selectionType && !leadData.quotationFile) {
-      errors.quotationFile = 'Please upload a quotation file';
-    }
-
-    setFormErrors(errors);
-    if (typeof setErrors === 'function') {
-      setErrors(prevErrors => ({ ...prevErrors, serviceDetails: errors }));
-    } else {
-      console.error('setErrors is not a function');
-    }
-    return Object.keys(errors).length === 0;
-  };
+    setFormErrors({});
+  }, [selectionType]);
 
   const handleSelectionTypeChange = (event) => {
-    setSelectionType(event.target.value);
+    const newSelectionType = event.target.value;
+    setSelectionType(newSelectionType);
+    if (newSelectionType === 'services') {
+      setLeadData(prevData => ({
+        ...prevData,
+        packages: 'NA',
+        packageType: 'NA',
+      }));
+    }
   };
 
   const handleServiceChange = (event) => {
@@ -114,19 +87,7 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
     setLeadData(prevData => ({
       ...prevData,
       servicesRequested: value,
-      websiteDevelopmentTime: '',
-      brandingTime: '',
-      socialMediaTime: '',
     }));
-    setSocialMediaRequirements([]);
-    setWebsiteDevelopmentRequirement('');
-    setBrandingRequirements([]);
-    if (!value.includes('Ecommerce Listing')) {
-      setEcommerceListingPlatforms([]);
-    }
-    if (!value.includes('Quick Commerce')) {
-      setQuickCommercePlatforms([]);
-    }
   };
 
   const handleSocialMediaChange = (event) => {
@@ -292,14 +253,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
           {selectedServices.includes('Social Media Management') && (
             <Grid item xs={12}>
               <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.socialMediaManagementRequirement}>
-                <InputLabel id="social-media-label">Social Media Management Requirement</InputLabel>
+                <InputLabel id="social-media-label">Social Media Platforms</InputLabel>
                 <Select
                   labelId="social-media-label"
                   multiple
                   name="socialMediaManagementRequirement"
                   value={socialMediaRequirements}
                   onChange={handleSocialMediaChange}
-                  input={<OutlinedInput label="Social Media Management Requirement" />}
+                  input={<OutlinedInput label="Social Media Platforms" />}
                   renderValue={(selected) => selected.join(', ')}
                   MenuProps={menuProps}
                 >
@@ -345,7 +306,7 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
           {selectedServices.includes('Branding') && (
             <Grid item xs={12}>
               <FormControl fullWidth variant="outlined" sx={selectSx} error={!!formErrors.brandingRequirement}>
-                <InputLabel id="branding-label">Branding Requirement</InputLabel>
+                <InputLabel id="branding-label">Branding Services</InputLabel>
                 <Select
                   labelId="branding-label"
                   multiple
@@ -358,14 +319,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                       brandingRequirement: e.target.value,
                     }));
                   }}
-                  input={<OutlinedInput label="Branding Requirement" />}
+                  input={<OutlinedInput label="Branding Services" />}
                   renderValue={(selected) => selected.join(', ')}
                   MenuProps={menuProps}
                 >
-                  {brandingOptions.map((option) => (
-                    <MenuItem key={option} value={option} style={{ color: 'white' }}>
-                      <Checkbox checked={brandingRequirements.indexOf(option) > -1} />
-                      <ListItemText primary={option} />
+                  {brandingServices.map((service) => (
+                    <MenuItem key={service} value={service} style={{ color: 'white' }}>
+                      <Checkbox checked={brandingRequirements.indexOf(service) > -1} />
+                      <ListItemText primary={service} />
                     </MenuItem>
                   ))}
                 </Select>
@@ -428,15 +389,14 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
         </>
       )}
 
-      {selectionType && (
-        <Grid item xs={12}>
+      <Grid item xs={12}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
           <input
-            accept="image/*,application/pdf"
+            accept="application/pdf"
             style={{ display: 'none' }}
             id="quotation-file"
             type="file"
             onChange={(e) => handleFileChange(e, 'quotationFile')}
-            name="quotationFile"
           />
           <label htmlFor="quotation-file">
             <Button 
@@ -451,7 +411,7 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
                 },
               }}
             >
-              {leadData.quotationFile ? 'Quotation File Added' : 'Upload Quotation (PDF or Image)'}
+              {leadData.quotationFile ? 'Quotation File Added' : 'Upload Quotation File'}
             </Button>
           </label>
           {leadData.quotationFile && (
@@ -459,11 +419,8 @@ const ServiceDetailsForm = ({ leadData, handleChange, handleFileChange, setLeadD
               File selected: {leadData.quotationFile.name}
             </Typography>
           )}
-          {formErrors.quotationFile && (
-            <FormHelperText error>{formErrors.quotationFile}</FormHelperText>
-          )}
-        </Grid>
-      )}
+        </Box>
+      </Grid>
     </Grid>
   );
 };

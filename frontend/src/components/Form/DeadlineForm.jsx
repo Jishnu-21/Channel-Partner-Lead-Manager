@@ -59,7 +59,7 @@ const packageDurations = {
 
 const DeadlineForm = ({ leadData, handleChange, selectedServices }) => {
   const getPackageDuration = () => {
-    if (leadData.packages && leadData.packageType) {
+    if (leadData.packages && leadData.packages !== 'NA' && leadData.packageType) {
       return packageDurations[leadData.packages][leadData.packageType];
     }
     return null;
@@ -94,7 +94,7 @@ const DeadlineForm = ({ leadData, handleChange, selectedServices }) => {
         </Grid>
       ) : (
         <>
-          {selectedServices.includes('Website Development') && (
+          {(selectedServices.includes('Website Development') || leadData.packages === 'NA') && (
             <Grid item xs={12}>
               <FormControl fullWidth variant="outlined" sx={selectSx}>
                 <InputLabel id="website-development-time-label">Website Development Time Period</InputLabel>
@@ -122,7 +122,7 @@ const DeadlineForm = ({ leadData, handleChange, selectedServices }) => {
             </Grid>
           )}
 
-          {selectedServices.includes('Branding') && (
+          {(selectedServices.includes('Branding') || leadData.packages === 'NA') && (
             <Grid item xs={12}>
               <FormControl fullWidth variant="outlined" sx={selectSx}>
                 <InputLabel id="branding-time-label">Branding Time Period</InputLabel>
@@ -150,7 +150,7 @@ const DeadlineForm = ({ leadData, handleChange, selectedServices }) => {
             </Grid>
           )}
 
-          {selectedServices.includes('Social Media Management') && (
+          {(selectedServices.includes('Social Media Management') || leadData.packages === 'NA') && (
             <Grid item xs={12}>
               <FormControl fullWidth variant="outlined" sx={selectSx}>
                 <InputLabel id="social-media-time-label">Social Media Marketing Time Period</InputLabel>

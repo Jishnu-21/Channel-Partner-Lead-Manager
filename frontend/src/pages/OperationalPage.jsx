@@ -96,8 +96,8 @@ const OperationalProfilePage = () => {
       (lead.companyName.toLowerCase().includes(term) ||
        lead.clientName.toLowerCase().includes(term) ||
        lead.clientEmail.toLowerCase().includes(term)) &&
-      (packageType === '' || lead.packageType === packageType) &&
-      (service === '' || (lead.servicesRequested && lead.servicesRequested.includes(service)))
+      (packageType === '' || (lead.packages !== 'NA' && lead.packageType === packageType)) &&
+      (service === '' || (lead.packages === 'NA' && lead.servicesRequested && lead.servicesRequested.includes(service)))
     );
     setFilteredLeads(filtered);
   };
@@ -155,11 +155,11 @@ const OperationalProfilePage = () => {
     return <Typography>Loading...</Typography>;
   }
 
-  const packageLeads = filteredLeads.filter(lead => lead.packages);
-  const serviceLeads = filteredLeads.filter(lead => !lead.packages);
+  const packageLeads = filteredLeads.filter(lead => lead.packages && lead.packages !== 'NA');
+  const serviceLeads = filteredLeads.filter(lead => !lead.packages || lead.packages === 'NA');
 
-  const uniquePackages = [...new Set(leads.map(lead => lead.packageType).filter(Boolean))];
-  const uniqueServices = [...new Set(leads.flatMap(lead => lead.servicesRequested || []))];
+  const uniquePackages = [...new Set(leads.filter(lead => lead.packages !== 'NA').map(lead => lead.packageType).filter(Boolean))];
+  const uniqueServices = [...new Set(leads.filter(lead => lead.packages === 'NA').flatMap(lead => lead.servicesRequested || []))];
 
   const currentLeads = tabValue === 0 ? packageLeads : serviceLeads;
   const paginatedLeads = currentLeads.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -278,7 +278,7 @@ const OperationalProfilePage = () => {
                     <TableCell>{renderValue(lead.clientName)}</TableCell>
                     <TableCell>{renderValue(lead.companyName)}</TableCell>
                     <TableCell>{renderValue(lead.servicesRequested?.join(', '))}</TableCell>
-                    <TableCell>{lead.serviceStartDate ? new Date(lead.serviceStartDate).toLocaleDateString() : "NA"}</TableCell>
+                    <TableCell>{lead.tentativeDeadlineByCustomer ? new Date(lead.tentativeDeadlineByCustomer).toLocaleDateString() : "NA"}</TableCell>
                     <TableCell>
                       {lead.socialMediaManagementRequirement ? (
                         <Box>
